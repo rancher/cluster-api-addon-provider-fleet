@@ -33,6 +33,13 @@ spec:
           - name: helm-kubeconfig
             readOnly: true
             mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          resources:
+            limits:
+              cpu: 100m
+              memory: 150Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
         - image: controller:latest
           imagePullPolicy: Always
           name: manager
@@ -46,15 +53,13 @@ spec:
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
-          # TODO(user): Configure the resources accordingly based on the project requirements.
-          # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-          # resources:
-          #   limits:
-          #     cpu: 500m
-          #     memory: 128Mi
-          #   requests:
-          #     cpu: 10m
-          #     memory: 64Mi
+          resources:
+            limits:
+              cpu: 100m
+              memory: 150Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
