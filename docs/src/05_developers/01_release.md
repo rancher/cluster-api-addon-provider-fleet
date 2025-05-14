@@ -47,6 +47,9 @@ git push upstream ${RELEASE_TAG}
 
 This will trigger a [release GitHub action](https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/actions/workflows/release.yaml) that creates a release with `CAAPF` components.
 
+4. Wait for the [update metadata](https://github.com/rancher/cluster-api-addon-provider-fleet/blob/main/.github/workflows/update-metadata.yaml) workflow to pass successfully. 
+This workflow will update the `metadata.yaml` file in the root of the repository preparing it for the next release.
+
 ## Versioning
 
 CAAPF follows [semantic versioning](https://semver.org/) specification.

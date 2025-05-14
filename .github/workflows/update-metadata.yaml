@@ -1,0 +1,65 @@
+name: Update Metadata on Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  update-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22.3'
+
+      - name: Run metadata update script
+        working-directory: ./hack/tools/metadataupdate
+        env:
+          REPO_DIR: $GITHUB_WORKSPACE
+        run: |
+          go run main.go --contract v1beta1 --repo-dir "${{ github.workspace }}"
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add "$GITHUB_WORKSPACE/metadata.yaml"
+          if [[ -n $(git diff --cached) ]]; then
+            echo "changes=true" >> $GITHUB_ENV
+          else
+            echo "changes=false" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and Push Changes
+        if: env.changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME=update-metadata-${{ github.ref_name }}
+          git checkout -b "$BRANCH_NAME"
+          git commit -m "Update metadata.yaml for next release"
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        if: env.changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF##*/}"
+          PR_TITLE="Update metadata.yaml for next release"
+          PR_BODY="This PR was automatically created by the release workflow. It adds the next minor release to metadata.yaml based on the new tag (${TAG})."
+          gh pr create \
+            --title "$PR_TITLE" \
+            --body "$PR_BODY" \
+            --label "area/release" \
+            --head "$BRANCH_NAME" \
+            --base "main" \
+
