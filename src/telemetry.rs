@@ -24,8 +24,7 @@ async fn init_tracer() -> opentelemetry_sdk::trace::Tracer {
     let builder = SdkTracerProvider::builder();
     #[cfg(feature = "telemetry")]
     let builder = builder.with_batch_exporter(exporter);
-    builder.build()
-        .tracer("addon-provider-fleet")
+    builder.build().tracer("addon-provider-fleet")
 }
 
 /// Initialize tracing

@@ -8,7 +8,7 @@ use k8s_openapi::{
 use kube::{
     api::{ObjectMeta, TypeMeta},
     core::{ParseExpressionError, Selector},
-    KubeSchema, CustomResource, Resource,
+    CustomResource, KubeSchema, Resource,
 };
 use schemars::JsonSchema;
 use serde::{ser, Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub const EXPERIMENTAL_HELM_OPS: &str = "EXPERIMENTAL_HELM_OPS";
     group = "addons.cluster.x-k8s.io",
     version = "v1alpha1",
     status = "FleetAddonConfigStatus",
-    validation = "self.metadata.name == 'fleet-addon-config'",
+    validation = "self.metadata.name == 'fleet-addon-config'"
 )]
 #[serde(rename_all = "camelCase")]
 pub struct FleetAddonConfigSpec {

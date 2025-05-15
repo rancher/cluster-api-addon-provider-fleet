@@ -123,8 +123,7 @@ impl Cluster {
                     host_network: config.host_network,
                     agent_env_vars: config.agent_env_vars.clone(),
                     ..Default::default()
-                }
-                .into(),
+                },
                 false => fleet_api_rs::fleet_cluster::ClusterSpec {
                     kube_config_secret: Some(format!("{}-kubeconfig", self.name_any())),
                     agent_namespace: config.agent_install_namespace().into(),
@@ -132,8 +131,7 @@ impl Cluster {
                     host_network: config.host_network,
                     agent_env_vars: config.agent_env_vars.clone(),
                     ..Default::default()
-                }
-                .into(),
+                },
             },
             #[cfg(not(feature = "agent-initiated"))]
             spec: fleet_api_rs::fleet_cluster::ClusterSpec {
@@ -191,8 +189,7 @@ impl Cluster {
             metadata: self.into(),
             spec: ClusterRegistrationTokenSpec {
                 ttl: Some("1h".into()),
-            }
-            .into(),
+            },
             ..Default::default()
         }
         .into()

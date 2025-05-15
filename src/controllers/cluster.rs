@@ -16,8 +16,6 @@ use kube::client::scope;
 use kube::runtime::watcher::{self, Config};
 use kube::{api::ResourceExt, runtime::controller::Action, Resource};
 use kube::{Api, Client};
-#[cfg(feature = "agent-initiated")]
-use rand::distr::{Alphanumeric, SampleString as _};
 use serde::Serialize;
 use serde_json::Value;
 use tracing::info;
