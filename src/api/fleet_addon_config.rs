@@ -8,7 +8,7 @@ use k8s_openapi::{
 use kube::{
     api::{ObjectMeta, TypeMeta},
     core::{ParseExpressionError, Selector},
-    CELSchema, CustomResource, Resource,
+    CustomResource, KubeSchema, Resource,
 };
 use schemars::JsonSchema;
 use serde::{ser, Deserialize, Serialize};
@@ -20,13 +20,13 @@ pub const EXPERIMENTAL_OCI_STORAGE: &str = "EXPERIMENTAL_OCI_STORAGE";
 pub const EXPERIMENTAL_HELM_OPS: &str = "EXPERIMENTAL_HELM_OPS";
 
 /// This provides a config for fleet addon functionality
-#[derive(CustomResource, Deserialize, Serialize, Clone, Default, Debug, CELSchema)]
+#[derive(CustomResource, Deserialize, Serialize, Clone, Default, Debug, KubeSchema)]
 #[kube(
     kind = "FleetAddonConfig",
     group = "addons.cluster.x-k8s.io",
     version = "v1alpha1",
     status = "FleetAddonConfigStatus",
-    rule = Rule::new("self.metadata.name == 'fleet-addon-config'"),
+    validation = "self.metadata.name == 'fleet-addon-config'"
 )]
 #[serde(rename_all = "camelCase")]
 pub struct FleetAddonConfigSpec {
