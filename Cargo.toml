@@ -59,7 +59,7 @@ anyhow = "1.0.98"
 base64 = "0.22.1"
 clap = { version = "4.5.38", features = ["derive"] }
 cluster-api-rs = "1.10.0"
-fleet-api-rs = "0.12.3-rc.1"
+fleet-api-rs = "0.12.3"
 async-broadcast = "0.7.2"
 pin-project = "1.1.10"
 async-stream = "0.3.6"

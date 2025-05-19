@@ -877,9 +877,9 @@ dependencies = [
 
 [[package]]
 name = "fleet-api-rs"
-version = "0.12.3-rc.1"
+version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f70503e55ef758a654a14209cbfc7f134de499f83e29edbfd3785b7c21564457"
+checksum = "f16e8ed4417fc9504e0cdf8e4e7f2bd8288515fb5ec34a020bcc88204e2faf06"
 dependencies = [
  "k8s-openapi",
  "kube",
