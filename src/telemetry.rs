@@ -1,7 +1,8 @@
 use opentelemetry::trace::TraceId;
 use tracing_subscriber::{prelude::*, EnvFilter, Registry};
 
-///  Fetch an opentelemetry::trace::TraceId as hex through the full tracing stack
+///  Fetch an `opentelemetry::trace::TraceId` as hex through the full tracing stack
+#[must_use]
 pub fn get_trace_id() -> TraceId {
     use opentelemetry::trace::TraceContextExt as _; // opentelemetry::Context -> opentelemetry::trace::Span
     use tracing_opentelemetry::OpenTelemetrySpanExt as _; // tracing::Span to opentelemetry::Context
@@ -13,7 +14,7 @@ pub fn get_trace_id() -> TraceId {
         .trace_id()
 }
 
-async fn init_tracer() -> opentelemetry_sdk::trace::Tracer {
+fn init_tracer() -> opentelemetry_sdk::trace::Tracer {
     use opentelemetry::trace::TracerProvider;
     #[cfg(feature = "telemetry")]
     use opentelemetry_otlp::SpanExporter;
@@ -28,9 +29,13 @@ async fn init_tracer() -> opentelemetry_sdk::trace::Tracer {
 }
 
 /// Initialize tracing
-pub async fn init() {
+///
+/// # Panics
+///
+/// This function will panic if the default tracing subscriber cannot be set.
+pub fn init() {
     // Setup tracing layers
-    let telemetry = tracing_opentelemetry::layer().with_tracer(init_tracer().await);
+    let telemetry = tracing_opentelemetry::layer().with_tracer(init_tracer());
     let logger = tracing_subscriber::fmt::layer().compact();
     let env_filter = EnvFilter::try_from_default_env()
         .or(EnvFilter::try_new("info"))
@@ -54,7 +59,7 @@ mod test {
     #[ignore = "requires a trace exporter"]
     async fn get_trace_id_returns_valid_traces() {
         use super::*;
-        super::init().await;
+        super::init();
         #[tracing::instrument(name = "test_span")] // need to be in an instrumented fn
         fn test_trace_id() -> TraceId {
             get_trace_id()

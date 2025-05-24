@@ -1,6 +1,5 @@
 use base64::prelude::*;
 use chrono::Local;
-use cluster_api_rs::capi_cluster::Cluster;
 use futures::StreamExt as _;
 use std::{fmt::Display, io, str::FromStr, sync::Arc, time::Duration};
 
@@ -25,8 +24,11 @@ use thiserror::Error;
 use tracing::{field::display, info, instrument, Span};
 
 use crate::{
-    api::fleet_addon_config::{
-        FeatureGates, FleetAddonConfig, FleetSettings, Install, InstallOptions, Server,
+    api::{
+        capi_cluster::Cluster,
+        fleet_addon_config::{
+            FeatureGates, FleetAddonConfig, FleetSettings, Install, InstallOptions, Server,
+        },
     },
     telemetry,
 };
@@ -111,7 +113,7 @@ impl FleetAddonConfig {
             create_namespace: true,
             bootstrap_local_cluster: self.spec.bootstrap().unwrap_or_default(),
             feature_gates: self.spec.feature_gates().cloned().unwrap_or_default(),
-            version: Default::default(),
+            version: Option::default(),
         };
 
         let status = self.status.get_or_insert_default();
@@ -246,7 +248,7 @@ impl FleetAddonConfig {
         Ok(Action::await_change())
     }
 
-    fn default_endpoint_lookup(&self, endpoints: Endpoints) -> Option<String> {
+    fn default_endpoint_lookup(endpoints: Endpoints) -> Option<String> {
         let subsets = endpoints.subsets?;
         let subnet = subsets.first()?.clone();
         let addresses = subnet.addresses?;
@@ -295,7 +297,9 @@ impl FleetAddonConfig {
             Server::InferLocal(true) => {
                 if let Some(api_server_url) = {
                     let ns = Namespace::from("default");
-                    self.default_endpoint_lookup(ctx.client.get("kubernetes", &ns).await?)
+                    FleetAddonConfig::default_endpoint_lookup(
+                        ctx.client.get("kubernetes", &ns).await?,
+                    )
                 } {
                     api_server_url
                 } else {
@@ -341,8 +345,7 @@ impl FleetAddonConfig {
             (None, Some(_), _) => {
                 chart.fleet_crds(&HelmOperation::Install)?.wait().await?;
             }
-            (Some(_), Some(_), Install::FollowLatest(false)) => {}
-            (Some(_), Some(_), Install::Version(_)) => {}
+            (Some(_), Some(_), Install::FollowLatest(false) | Install::Version(_)) => {}
             (_, _, _) => return Ok(Some(Action::requeue(Duration::from_secs(10)))),
         };
 
@@ -378,7 +381,7 @@ impl FleetAddonConfig {
                 chart.fleet(&HelmOperation::Upgrade)?.wait().await?;
                 status.conditions.push(Condition {
                     last_transition_time: Time(Local::now().to_utc()),
-                    message: format!("Updated fleet to version {}", expected),
+                    message: format!("Updated fleet to version {expected}"),
                     observed_generation: self.metadata.generation,
                     reason: "Installed".into(),
                     status: "True".into(),
@@ -391,7 +394,7 @@ impl FleetAddonConfig {
                 chart.fleet(&HelmOperation::Install)?.wait().await?;
                 status.conditions.push(Condition {
                     last_transition_time: Time(Local::now().to_utc()),
-                    message: format!("Installed fleet version {}", app_version),
+                    message: format!("Installed fleet version {app_version}"),
                     observed_generation: self.metadata.generation,
                     reason: "Installed".into(),
                     status: "True".into(),
@@ -457,6 +460,11 @@ impl FeatureGates {
     }
 }
 
+/// Converts a typed watcher event to a dynamic object event.
+///
+/// # Errors
+///
+/// This function will return an error if the conversion to `DynamicObject` fails.
 pub fn to_dynamic_event<R>(
     ev: Result<Event<R>, watcher::Error>,
 ) -> Result<Event<DynamicObject>, watcher::Error>

@@ -48,6 +48,14 @@ impl Default for Metrics {
 
 impl Metrics {
     /// Register API metrics to start tracking them.
+    /// Register metrics with the provided registry.
+    ///
+    /// # Errors
+    ///
+    /// Returns `prometheus::Error` if:
+    /// - A metric with the same name is already registered
+    /// - Metric names don't follow naming conventions
+    /// - Other registry-related errors occur
     pub fn register(self, registry: &Registry) -> Result<Self, prometheus::Error> {
         registry.register(Box::new(self.reconcile_duration.clone()))?;
         registry.register(Box::new(self.failures.clone()))?;
@@ -55,12 +63,14 @@ impl Metrics {
         Ok(self)
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn reconcile_failure<C: kube::Resource>(&self, obj: Arc<C>, e: &Error) {
         self.failures
             .with_label_values(&[obj.name_any(), e.metric_label()])
-            .inc()
+            .inc();
     }
 
+    #[must_use]
     pub fn count_and_measure(&self) -> ReconcileMeasurer {
         self.reconciliations.inc();
         ReconcileMeasurer {

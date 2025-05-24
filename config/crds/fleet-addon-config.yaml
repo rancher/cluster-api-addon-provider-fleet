@@ -25,11 +25,11 @@ spec:
                 description: |-
                   Enable Cluster config funtionality.
 
-                  This will create Fleet Cluster for each Cluster with the same name. In case the cluster specifies topology.class, the name of the ClusterClass will be added to the Fleet Cluster labels.
+                  This will create Fleet Cluster for each Cluster with the same name. In case the cluster specifies topology.class, the name of the `ClusterClass` will be added to the Fleet Cluster labels.
                 nullable: true
                 properties:
                   agentEnvVars:
-                    description: AgentEnvVars are extra environment variables to be added to the agent deployment.
+                    description: '`AgentEnvVars` are extra environment variables to be added to the agent deployment.'
                     items:
                       description: EnvVar represents an environment variable present in a Container.
                       properties:
@@ -152,7 +152,7 @@ spec:
                     nullable: true
                     type: array
                   applyClassGroup:
-                    description: Apply a ClusterGroup for a ClusterClass referenced from a different namespace.
+                    description: Apply a `ClusterGroup` for a `ClusterClass` referenced from a different namespace.
                     nullable: true
                     type: boolean
                   hostNetwork:
@@ -248,7 +248,7 @@ spec:
                 description: |-
                   Enable clusterClass controller functionality.
 
-                  This will create Fleet ClusterGroups for each ClusterClaster with the same name.
+                  This will create Fleet `ClusterGroups` for each `ClusterClaster` with the same name.
                 nullable: true
                 properties:
                   patchResource:
@@ -272,7 +272,7 @@ spec:
                     nullable: true
                     properties:
                       configMap:
-                        description: FeaturesConfigMap references a ConfigMap where to apply feature flags. If a ConfigMap is referenced, the controller will update it instead of upgrading the Fleet chart.
+                        description: '`FeaturesConfigMap` references a `ConfigMap` where to apply feature flags. If a `ConfigMap` is referenced, the controller will update it instead of upgrading the Fleet chart.'
                         nullable: true
                         properties:
                           ref:

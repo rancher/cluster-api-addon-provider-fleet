@@ -32,13 +32,13 @@ pub const EXPERIMENTAL_HELM_OPS: &str = "EXPERIMENTAL_HELM_OPS";
 pub struct FleetAddonConfigSpec {
     /// Enable clusterClass controller functionality.
     ///
-    /// This will create Fleet ClusterGroups for each ClusterClaster with the same name.
+    /// This will create Fleet `ClusterGroups` for each `ClusterClaster` with the same name.
     pub cluster_class: Option<ClusterClassConfig>,
 
     /// Enable Cluster config funtionality.
     ///
     /// This will create Fleet Cluster for each Cluster with the same name.
-    /// In case the cluster specifies topology.class, the name of the ClusterClass
+    /// In case the cluster specifies topology.class, the name of the `ClusterClass`
     /// will be added to the Fleet Cluster labels.
     pub cluster: Option<ClusterConfig>,
 
@@ -52,14 +52,14 @@ pub struct FleetAddonConfigSpec {
 impl Default for FleetAddonConfig {
     fn default() -> Self {
         Self {
-            metadata: Default::default(),
+            metadata: ObjectMeta::default(),
             spec: FleetAddonConfigSpec {
                 cluster_class: Some(ClusterClassConfig::default()),
                 cluster: Some(ClusterConfig::default()),
                 config: Some(FleetConfig::default()),
                 ..Default::default()
             },
-            status: Default::default(),
+            status: Option::default(),
         }
     }
 }
@@ -98,7 +98,7 @@ impl Default for ClusterClassConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ClusterConfig {
-    /// Apply a ClusterGroup for a ClusterClass referenced from a different namespace.
+    /// Apply a `ClusterGroup` for a `ClusterClass` referenced from a different namespace.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apply_class_group: Option<bool>,
 
@@ -128,7 +128,7 @@ pub struct ClusterConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub host_network: Option<bool>,
 
-    /// AgentEnvVars are extra environment variables to be added to the agent deployment.
+    /// `AgentEnvVars` are extra environment variables to be added to the agent deployment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent_env_vars: Option<Vec<ClusterAgentEnvVars>>,
 
@@ -178,7 +178,7 @@ impl Display for FleetChartValues {
 }
 
 impl FleetAddonConfigSpec {
-    /// Returns reference to FeatureGates if defined.
+    /// Returns reference to `FeatureGates` if defined.
     pub(crate) fn feature_gates(&self) -> Option<&FeatureGates> {
         self.config.as_ref()?.feature_gates.as_ref()
     }
@@ -237,7 +237,7 @@ impl ClusterConfig {
     }
 }
 
-/// NamingStrategy is controlling Fleet cluster naming
+/// `NamingStrategy` is controlling Fleet cluster naming
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default)]
 pub struct NamingStrategy {
     /// Specify a prefix for the Cluster name, applied to created Fleet cluster
@@ -251,12 +251,12 @@ impl Default for ClusterConfig {
         Self {
             apply_class_group: Some(true),
             set_owner_references: Some(true),
-            naming: Default::default(),
+            naming: Option::default(),
             agent_namespace: AGENT_NAMESPACE.to_string().into(),
             host_network: Some(true),
             #[cfg(feature = "agent-initiated")]
             agent_initiated: Some(true),
-            selectors: Default::default(),
+            selectors: Selectors::default(),
             patch_resource: Some(true),
             agent_env_vars: None,
             agent_tolerations: None,
@@ -281,7 +281,7 @@ pub struct FleetConfig {
 impl Default for FleetConfig {
     fn default() -> Self {
         Self {
-            server: Default::default(),
+            server: Option::default(),
             feature_gates: Some(FeatureGates::default()),
             bootstrap_local_cluster: None,
         }
@@ -313,7 +313,7 @@ impl Display for FeatureGates {
 }
 
 impl FeatureGates {
-    /// Returns reference to a ConfigMap if defined.
+    /// Returns reference to a `ConfigMap` if defined.
     pub(crate) fn config_map_ref(&self) -> Option<&ObjectReference> {
         self.config_map.as_ref()?.reference.as_ref()
     }
@@ -358,8 +358,8 @@ impl Default for FeatureGates {
     }
 }
 
-/// FeaturesConfigMap references a ConfigMap where to apply feature flags.
-/// If a ConfigMap is referenced, the controller will update it instead of upgrading the Fleet chart.
+/// `FeaturesConfigMap` references a `ConfigMap` where to apply feature flags.
+/// If a `ConfigMap` is referenced, the controller will update it instead of upgrading the Fleet chart.
 #[derive(Clone, Default, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FeaturesConfigMap {
@@ -368,7 +368,7 @@ pub struct FeaturesConfigMap {
     pub reference: Option<ObjectReference>,
 }
 
-/// FleetChartValues represents Fleet chart values.
+/// `FleetChartValues` represents Fleet chart values.
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FleetChartValues {
@@ -377,7 +377,7 @@ pub struct FleetChartValues {
     pub other: Value,
 }
 
-/// EnvironmentVariable is a simple name/value pair.
+/// `EnvironmentVariable` is a simple name/value pair.
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvironmentVariable {
@@ -404,7 +404,7 @@ pub enum Install {
 }
 
 impl Install {
-    /// Perform version normalization for comparison with `helm search` app_version output
+    /// Perform version normalization for comparison with `helm search` `app_version` output
     pub(crate) fn normalized(self) -> Self {
         match self {
             Install::FollowLatest(_) => self,
@@ -436,6 +436,7 @@ pub struct InstallOptions {
 }
 
 impl NamingStrategy {
+    #[must_use]
     pub fn apply(&self, name: Option<String>) -> Option<String> {
         name.map(|name| match &self.prefix {
             Some(prefix) => prefix.clone() + &name,
@@ -570,7 +571,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sync_config_map() {
-        let want_fleet_data = r#"extraEnv:
+        let want_fleet_data = r"extraEnv:
 - name: EXPERIMENTAL_HELM_OPS
   value: 'true'
 - name: foo
@@ -579,7 +580,7 @@ mod tests {
   value: 'true'
 foo:
   bar: foobar
-"#;
+";
         let fleet_data = r#"extraEnv:
 - name: EXPERIMENTAL_HELM_OPS
   value: "false"
@@ -596,17 +597,17 @@ foo:
 
         feature_gates.merge_features(&mut data);
 
-        assert_eq!(want_fleet_data.to_string(), data.fleet.to_string())
+        assert_eq!(want_fleet_data.to_string(), data.fleet.to_string());
     }
 
     #[tokio::test]
     async fn test_sync_empty_config_map() {
-        let want_fleet_data = r#"extraEnv:
+        let want_fleet_data = r"extraEnv:
 - name: EXPERIMENTAL_HELM_OPS
   value: 'false'
 - name: EXPERIMENTAL_OCI_STORAGE
   value: 'false'
-"#;
+";
         let mut data = FleetSettingsSpec::default();
         let feature_gates = FeatureGates {
             experimental_oci_storage: false,
@@ -616,6 +617,6 @@ foo:
 
         feature_gates.merge_features(&mut data);
 
-        assert_eq!(want_fleet_data.to_string(), data.fleet.to_string())
+        assert_eq!(want_fleet_data.to_string(), data.fleet.to_string());
     }
 }

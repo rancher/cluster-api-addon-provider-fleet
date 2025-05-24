@@ -70,21 +70,26 @@ pub struct Flags {
 }
 
 impl State {
+    /// # Panics
+    ///
+    /// Panics if the default metrics cannot be registered with the registry.
+    #[must_use]
     pub fn new(version: u32) -> Self {
-        let registry = Default::default();
+        let registry = prometheus::Registry::default();
         Self {
             metrics: Metrics::default().register(&registry).unwrap(),
             registry,
             flags: Flags::parse(),
             dispatcher: MultiDispatcher::new(128),
-            diagnostics: Default::default(),
-            stream: BroadcastStream::new(Default::default()),
+            diagnostics: Arc::default(),
+            stream: BroadcastStream::new(Arc::default()),
             version,
             barrier: Arc::new(Barrier::new(3)),
         }
     }
 
     /// Metrics getter
+    #[must_use]
     pub fn metrics(&self) -> Vec<prometheus::proto::MetricFamily> {
         self.registry.gather()
     }
@@ -95,6 +100,7 @@ impl State {
     }
 
     // Create a Controller Context that can update State
+    #[must_use]
     pub fn to_context(&self, client: Client) -> Arc<Context> {
         Arc::new(Context {
             client,
@@ -138,6 +144,9 @@ trait ControllerDefault: WatchStreamExt {
 
 impl<St: ?Sized> ControllerDefault for St where St: Stream {}
 
+/// # Panics
+///
+/// Panics if the kube Client cannot be created or if the watcher stream panics unexpectedly.
 pub async fn run_fleet_addon_config_controller(state: State) {
     let client = Client::try_default()
         .await
@@ -191,11 +200,14 @@ pub async fn run_fleet_addon_config_controller(state: State) {
     state.barrier.wait().await;
 
     tokio::select! {
-        _ = watcher => {panic!("This should not happen before controllers exit")},
+        () = watcher => {panic!("This should not happen before controllers exit")},
         _ = futures::future::join(dynamic_watches_controller, config_controller) => {}
     };
 }
 
+/// # Panics
+///
+/// Panics if the kube Client cannot be created or if the watcher stream panics unexpectedly.
 pub async fn run_fleet_helm_controller(state: State) {
     let client = Client::try_default()
         .await
@@ -274,6 +286,10 @@ pub async fn run_fleet_helm_controller(state: State) {
 }
 
 /// Initialize the controller and shared state (given the crd is installed)
+///
+/// # Panics
+///
+/// Panics if the kube Client cannot be created.
 pub async fn run_cluster_controller(state: State) {
     let client = Client::try_default()
         .await
@@ -320,8 +336,8 @@ pub async fn run_cluster_controller(state: State) {
                 .into_iter()
                 .filter_map(move |c: Arc<Cluster>| {
                     let in_namespace =
-                        c.spec.topology.as_ref()?.class_namespace == mapping.namespace();
-                    in_namespace.then_some(ObjectRef::from_obj(c.deref()))
+                        c.spec.proxy.topology.as_ref()?.class_namespace == mapping.namespace();
+                    in_namespace.then_some(ObjectRef::from_obj(&*c))
                 })
         })
         .shutdown_on_signal()
@@ -340,6 +356,10 @@ pub async fn run_cluster_controller(state: State) {
 }
 
 /// Initialize the controller and shared state (given the crd is installed)
+///
+/// # Panics
+///
+/// Panics if the kube Client cannot be created.
 pub async fn run_cluster_class_controller(state: State) {
     let client = Client::try_default()
         .await
@@ -392,6 +412,7 @@ pub async fn run_cluster_class_controller(state: State) {
     tokio::join!(group_controller, cluster_class_controller);
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn error_policy(doc: Arc<impl kube::Resource>, error: &Error, ctx: Arc<Context>) -> Action {
     warn!("reconcile failed: {:?}", error);
     ctx.metrics.reconcile_failure(doc, error);

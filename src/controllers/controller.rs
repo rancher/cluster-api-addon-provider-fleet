@@ -55,7 +55,7 @@ pub struct Context {
     pub barrier: Arc<Barrier>,
 }
 
-#[instrument(skip_all, fields(name = res.name_any(), namespace = res.namespace(), api_version = typed_gvk::<R>(()).api_version(), kind = R::kind(&()).to_string()), err)]
+#[instrument(skip_all, fields(name = res.name_any(), namespace = res.namespace(), api_version = typed_gvk::<R>(&()).api_version(), kind = R::kind(&()).to_string()), err)]
 pub(crate) async fn get_or_create<R>(ctx: Arc<Context>, res: &R) -> GetOrCreateResult<Action>
 where
     R: std::fmt::Debug,
@@ -110,7 +110,7 @@ where
     Ok(Action::await_change())
 }
 
-#[instrument(skip_all, fields(name = res.name_any(), namespace = res.namespace(), api_version = typed_gvk::<R>(()).api_version(), kind = R::kind(&()).to_string()), err)]
+#[instrument(skip_all, fields(name = res.name_any(), namespace = res.namespace(), api_version = typed_gvk::<R>(&()).api_version(), kind = R::kind(&()).to_string()), err)]
 pub(crate) async fn patch<R>(
     ctx: Arc<Context>,
     res: &mut R,
@@ -170,6 +170,7 @@ pub(crate) async fn fetch_config(client: Client) -> ConfigFetchResult<FleetAddon
 
 pub(crate) trait FleetBundle {
     async fn sync(&mut self, ctx: Arc<Context>) -> Result<Action, impl Into<SyncError>>;
+    #[allow(clippy::unused_async)]
     async fn cleanup(&mut self, _ctx: Arc<Context>) -> Result<Action, SyncError> {
         Ok(Action::await_change())
     }
