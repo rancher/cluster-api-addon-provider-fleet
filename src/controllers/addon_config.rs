@@ -347,7 +347,7 @@ impl FleetAddonConfig {
             }
             (Some(_), Some(_), Install::FollowLatest(false) | Install::Version(_)) => {}
             (_, _, _) => return Ok(Some(Action::requeue(Duration::from_secs(10)))),
-        };
+        }
 
         let installed_chart_meta = FleetChart::get_metadata("fleet").await?;
         let search_result = chart
@@ -407,7 +407,7 @@ impl FleetAddonConfig {
             }
             (Some(_), Some(_), Install::Version(_)) => {}
             (_, _, _) => return Ok(Some(Action::requeue(Duration::from_secs(10)))),
-        };
+        }
 
         Ok(None)
     }

@@ -105,7 +105,7 @@ where
         // Ignore forbidden errors on namespace deletion
         Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
         e => e?,
-    };
+    }
 
     Ok(Action::await_change())
 }
@@ -156,7 +156,7 @@ where
         // Ignore forbidden errors on namespace deletion
         Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
         e => e?,
-    };
+    }
 
     Ok(Action::await_change())
 }
@@ -238,7 +238,7 @@ where
             // Ignore forbidden errors on namespace deletion
             Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
             e => e?,
-        };
+        }
 
         Ok(Action::await_change())
     }

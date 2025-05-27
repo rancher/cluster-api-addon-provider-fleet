@@ -72,6 +72,6 @@ async fn main() -> anyhow::Result<()> {
             server
         )
         .3?;
-    };
+    }
     Ok(())
 }

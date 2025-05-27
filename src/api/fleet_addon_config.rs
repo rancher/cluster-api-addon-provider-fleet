@@ -183,7 +183,7 @@ impl FleetAddonConfigSpec {
         self.config.as_ref()?.feature_gates.as_ref()
     }
 
-    /// Returns the value of bootstrap_local_cluster if defined.
+    /// Returns the value of `bootstrap_local_cluster` if defined.
     pub(crate) fn bootstrap(&self) -> Option<bool> {
         self.config.as_ref()?.bootstrap_local_cluster
     }
@@ -332,7 +332,7 @@ impl FeatureGates {
                 name: EXPERIMENTAL_HELM_OPS.to_string(),
                 value: self.experimental_helm_ops.to_string(),
             }),
-        };
+        }
 
         match env_map
             .iter_mut()
@@ -343,7 +343,7 @@ impl FeatureGates {
                 name: EXPERIMENTAL_OCI_STORAGE.to_string(),
                 value: self.experimental_oci_storage.to_string(),
             }),
-        };
+        }
     }
 }
 

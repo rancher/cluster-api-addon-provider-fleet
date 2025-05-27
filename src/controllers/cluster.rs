@@ -142,7 +142,7 @@ impl FleetBundle for FleetClusterBundle {
                 let class_namespace = mapping.namespace().unwrap_or_default();
                 let cluster_namespace = mapping.name_any();
                 info!("Updated BundleNamespaceMapping for cluster {cluster_name} between class namespace: {class_namespace} and cluster namespace: {cluster_namespace}");
-            };
+            }
         }
 
         if self.config.cluster_patch_enabled() {
@@ -169,7 +169,7 @@ impl FleetBundle for FleetClusterBundle {
                 )
                 .await
                 .map_err(ClusterSyncError::GroupPatchError)?;
-            };
+            }
         }
 
         Ok(Action::await_change())
