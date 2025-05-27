@@ -263,6 +263,10 @@ spec:
               config:
                 nullable: true
                 properties:
+                  bootstrapLocalCluster:
+                    description: Enable auto-installation of a fleet agent in the local cluster.
+                    nullable: true
+                    type: boolean
                   featureGates:
                     description: feature gates controlling experimental features
                     nullable: true
@@ -369,7 +373,6 @@ spec:
                     type: string
                 type: object
             type: object
-            x-kubernetes-validations: []
           status:
             nullable: true
             properties:
@@ -412,7 +415,7 @@ spec:
             type: object
         required:
         - spec
-        title: FleetAddonConfig_kube_validation
+        title: FleetAddonConfigValidated
         type: object
         x-kubernetes-validations:
         - rule: self.metadata.name == 'fleet-addon-config'

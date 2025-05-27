@@ -109,7 +109,7 @@ impl FleetAddonConfig {
             wait: true,
             update_dependency: true,
             create_namespace: true,
-            bootstrap_local_cluster: false,
+            bootstrap_local_cluster: self.spec.bootstrap().unwrap_or_default(),
             feature_gates: self.spec.feature_gates().cloned().unwrap_or_default(),
             version: Default::default(),
         };
