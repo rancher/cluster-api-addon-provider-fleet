@@ -10,6 +10,7 @@ use super::{
     RepoUpdateResult,
 };
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Default, Clone)]
 pub struct FleetChart {
     pub repo: String,
@@ -55,18 +56,33 @@ pub struct ChartSearch {
 }
 
 impl FleetChart {
+    /// Adds the fleet helm repository.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn.
     pub fn add_repo(&self) -> RepoAddResult<Child> {
         Ok(Command::new("helm")
             .args(["repo", "add", "fleet", &self.repo])
             .spawn()?)
     }
 
+    /// Updates the fleet helm repository.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn.
     pub fn update_repo(&self) -> RepoUpdateResult<Child> {
         Ok(Command::new("helm")
             .args(["repo", "update", "fleet"])
             .spawn()?)
     }
 
+    /// Searches the fleet helm repository for charts.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn or the output cannot be parsed.
     pub async fn search_repo(&self) -> RepoSearchResult<Vec<ChartSearch>> {
         let result = Command::new("helm")
             .stdout(Stdio::piped())
@@ -79,6 +95,11 @@ impl FleetChart {
         Ok(serde_json::from_str(output)?)
     }
 
+    /// Gets metadata for a specific chart.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn or the output cannot be parsed.
     pub async fn get_metadata(chart: &str) -> MetadataGetResult<Option<ChartInfo>> {
         let mut metadata = Command::new("helm");
         metadata.args(["list", "-A", "-o", "json"]);
@@ -99,6 +120,11 @@ impl FleetChart {
         Ok(infos.into_iter().find(|i| i.name == chart))
     }
 
+    /// Installs or upgrades the fleet chart.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn.
     pub fn fleet(&self, operation: &HelmOperation) -> FleetInstallResult<Child> {
         let mut install = Command::new("helm");
 
@@ -147,6 +173,11 @@ impl FleetChart {
         Ok(install.spawn()?)
     }
 
+    /// Installs or upgrades the fleet-crd chart.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the helm command fails to spawn.
     pub fn fleet_crds(&self, operation: &HelmOperation) -> FleetCRDInstallResult<Child> {
         let mut install = Command::new("helm");
 

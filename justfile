@@ -44,6 +44,10 @@ fmt:
 test-unit:
   cargo test
 
+# run clippy
+clippy:
+  cargo clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic
+
 # compile for musl (for docker image)
 compile features="":  _create-out-dir
   #!/usr/bin/env bash

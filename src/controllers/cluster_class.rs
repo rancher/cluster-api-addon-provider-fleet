@@ -22,16 +22,15 @@ pub struct FleetClusterClassBundle {
 impl FleetBundle for FleetClusterClassBundle {
     #[allow(refining_impl_trait)]
     async fn sync(&mut self, ctx: Arc<Context>) -> GroupSyncResult<Action> {
-        match self.config.cluster_class_patch_enabled() {
-            true => {
-                patch(
-                    ctx,
-                    &mut self.fleet_group,
-                    &PatchParams::apply("addon-provider-fleet"),
-                )
-                .await?
-            }
-            false => get_or_create(ctx.clone(), &self.fleet_group).await?,
+        if self.config.cluster_class_patch_enabled() {
+            patch(
+                ctx,
+                &mut self.fleet_group,
+                &PatchParams::apply("addon-provider-fleet"),
+            )
+            .await?
+        } else {
+            get_or_create(ctx.clone(), &self.fleet_group).await?
         };
 
         Ok(Action::await_change())
@@ -54,7 +53,7 @@ impl FleetController for ClusterClass {
         }) = config.spec.cluster_class
         {
         } else {
-            fleet_group.metadata.owner_references = None
+            fleet_group.metadata.owner_references = None;
         }
 
         Ok(Some(FleetClusterClassBundle {

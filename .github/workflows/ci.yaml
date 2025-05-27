@@ -123,3 +123,10 @@ jobs:
         with:
           name: artifacts-import-rke2-${{ matrix.display_name }}
           path: _out/gather
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -W clippy::pedantic

@@ -1,6 +1,6 @@
+use crate::api::capi_clusterclass::ClusterClass;
 use crate::api::fleet_clustergroup::ClusterGroup;
 
-use cluster_api_rs::capi_clusterclass::ClusterClass;
 use kube::api::{Patch, PatchParams};
 use kube::runtime::controller::Action;
 use kube::{Api, ResourceExt};
@@ -13,6 +13,11 @@ use super::controller::{patch, Context, FLEET_FINALIZER};
 use super::{GroupSyncResult, SyncError};
 
 impl ClusterGroup {
+    /// Reconciles the `ClusterGroup` resource.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the sync operation fails.
     pub async fn reconcile(self: Arc<Self>, ctx: Arc<Context>) -> crate::Result<Action> {
         let mut group = self.deref().clone();
         Ok(group.sync(ctx).await.map_err(SyncError::from)?)
@@ -42,7 +47,7 @@ impl ClusterGroup {
                 Api::namespaced(ctx.client.clone(), &self.namespace().unwrap_or_default());
             api.patch(
                 &self.name_any(),
-                &Default::default(),
+                &PatchParams::default(),
                 &Patch::Merge(json!({"metadata": {"finalizers": self.finalizers()}})),
             )
             .await?;

@@ -2,15 +2,18 @@ use std::collections::BTreeMap;
 
 use cluster_api_rs::capi_cluster::{ClusterSpec, ClusterStatus};
 use fleet_api_rs::{
-    fleet_bundle_namespace_mapping::BundleNamespaceMappingNamespaceSelector,
+    fleet_bundle_namespace_mapping::{
+        BundleNamespaceMappingBundleSelector, BundleNamespaceMappingNamespaceSelector,
+    },
     fleet_clustergroup::{ClusterGroupSelector, ClusterGroupSpec},
 };
 use kube::{
     api::{ObjectMeta, TypeMeta},
-    Resource, ResourceExt as _,
+    CustomResource, Resource, ResourceExt as _,
 };
 #[cfg(feature = "agent-initiated")]
 use rand::distr::{Alphanumeric, SampleString as _};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -23,14 +26,19 @@ use super::{
 #[cfg(feature = "agent-initiated")]
 use super::fleet_cluster_registration_token::ClusterRegistrationToken;
 
-#[derive(Resource, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
-#[resource(inherit = cluster_api_rs::capi_cluster::Cluster)]
-pub struct Cluster {
-    #[serde(flatten, default)]
-    pub types: Option<TypeMeta>,
-    pub metadata: ObjectMeta,
-    pub spec: ClusterSpec,
-    pub status: Option<ClusterStatus>,
+/// `ClusterProxy` defines the desired state of the CAPI Cluster.
+#[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[kube(
+    group = "cluster.x-k8s.io",
+    version = "v1beta1",
+    kind = "Cluster",
+    plural = "clusters"
+)]
+#[kube(namespaced)]
+#[kube(status = "ClusterStatus")]
+pub struct ClusterProxy {
+    #[serde(flatten)]
+    pub proxy: ClusterSpec,
 }
 
 impl From<&Cluster> for ObjectMeta {
@@ -115,23 +123,24 @@ impl Cluster {
                 ..self.into()
             },
             #[cfg(feature = "agent-initiated")]
-            spec: match config.agent_initiated_connection() {
-                true => fleet_api_rs::fleet_cluster::ClusterSpec {
+            spec: if config.agent_initiated_connection() {
+                fleet_api_rs::fleet_cluster::ClusterSpec {
                     client_id: Some(Alphanumeric.sample_string(&mut rand::rng(), 64)),
                     agent_namespace: config.agent_install_namespace().into(),
                     agent_tolerations: config.agent_tolerations().into(),
                     host_network: config.host_network,
                     agent_env_vars: config.agent_env_vars.clone(),
                     ..Default::default()
-                },
-                false => fleet_api_rs::fleet_cluster::ClusterSpec {
+                }
+            } else {
+                fleet_api_rs::fleet_cluster::ClusterSpec {
                     kube_config_secret: Some(format!("{}-kubeconfig", self.name_any())),
                     agent_namespace: config.agent_install_namespace().into(),
                     agent_tolerations: config.agent_tolerations().into(),
                     host_network: config.host_network,
                     agent_env_vars: config.agent_env_vars.clone(),
                     ..Default::default()
-                },
+                }
             },
             #[cfg(not(feature = "agent-initiated"))]
             spec: fleet_api_rs::fleet_cluster::ClusterSpec {
@@ -152,7 +161,7 @@ impl Cluster {
     ) -> Option<BundleNamespaceMapping> {
         config?.apply_class_group().then_some(true)?;
 
-        let topology = self.spec.topology.as_ref()?;
+        let topology = self.spec.proxy.topology.as_ref()?;
         let class_namespace = topology.class_namespace.clone()?;
 
         let match_labels = {
@@ -168,7 +177,7 @@ impl Cluster {
                 namespace: Some(class_namespace),
                 ..Default::default()
             },
-            bundle_selector: Default::default(),
+            bundle_selector: BundleNamespaceMappingBundleSelector::default(),
             namespace_selector: BundleNamespaceMappingNamespaceSelector {
                 match_labels,
                 ..Default::default()
@@ -196,10 +205,15 @@ impl Cluster {
     }
 
     pub(crate) fn cluster_class_namespace(&self) -> Option<&str> {
-        self.spec.topology.as_ref()?.class_namespace.as_deref()
+        self.spec
+            .proxy
+            .topology
+            .as_ref()?
+            .class_namespace
+            .as_deref()
     }
 
     pub(crate) fn cluster_class_name(&self) -> Option<&str> {
-        Some(&self.spec.topology.as_ref()?.class)
+        Some(&self.spec.proxy.topology.as_ref()?.class)
     }
 }

@@ -27,7 +27,7 @@ async fn index(c: Data<State>, _req: HttpRequest) -> impl Responder {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    telemetry::init().await;
+    telemetry::init();
 
     let client = Client::try_default()
         .await
@@ -44,38 +44,34 @@ async fn main() -> anyhow::Result<()> {
             .expect("version parse successfully"),
     );
 
-    match state.flags.helm_install {
-        true => {
-            let helm_install_controller = controller::run_fleet_helm_controller(state.clone());
-            tokio::join!(helm_install_controller);
-        }
-        false => {
-            let fleet_config_controller =
-                controller::run_fleet_addon_config_controller(state.clone());
-            let cluster_controller = controller::run_cluster_controller(state.clone());
-            let cluster_class_controller = controller::run_cluster_class_controller(state.clone());
+    if state.flags.helm_install {
+        let helm_install_controller = controller::run_fleet_helm_controller(state.clone());
+        tokio::join!(helm_install_controller);
+    } else {
+        let fleet_config_controller = controller::run_fleet_addon_config_controller(state.clone());
+        let cluster_controller = controller::run_cluster_controller(state.clone());
+        let cluster_class_controller = controller::run_cluster_class_controller(state.clone());
 
-            // Start web server
-            let server = HttpServer::new(move || {
-                App::new()
-                    .app_data(Data::new(state.clone()))
-                    .wrap(middleware::Logger::default().exclude("/health"))
-                    .service(index)
-                    .service(health)
-                    .service(metrics)
-            })
-            .bind("0.0.0.0:8443")?
-            .shutdown_timeout(5)
-            .run();
+        // Start web server
+        let server = HttpServer::new(move || {
+            App::new()
+                .app_data(Data::new(state.clone()))
+                .wrap(middleware::Logger::default().exclude("/health"))
+                .service(index)
+                .service(health)
+                .service(metrics)
+        })
+        .bind("0.0.0.0:8443")?
+        .shutdown_timeout(5)
+        .run();
 
-            tokio::join!(
-                cluster_controller,
-                cluster_class_controller,
-                fleet_config_controller,
-                server
-            )
-            .3?;
-        }
-    };
+        tokio::join!(
+            cluster_controller,
+            cluster_class_controller,
+            fleet_config_controller,
+            server
+        )
+        .3?;
+    }
     Ok(())
 }

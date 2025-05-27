@@ -144,7 +144,7 @@ where
             rx,
             // Initialize a ready store by default
             store: {
-                let mut store: Writer<K> = Default::default();
+                let mut store: Writer<K> = Writer::default();
                 store.apply_watcher_event(&Event::InitDone);
                 store
             },
@@ -161,8 +161,8 @@ pub fn gvk(obj: &DynamicObject) -> Option<GroupVersionKind> {
     gvk.try_into().ok()
 }
 
-pub fn typed_gvk<K: Resource>(dt: K::DynamicType) -> GroupVersionKind {
-    GroupVersionKind::gvk(&K::group(&dt), &K::version(&dt), &K::kind(&dt))
+pub fn typed_gvk<K: Resource>(dt: &K::DynamicType) -> GroupVersionKind {
+    GroupVersionKind::gvk(&K::group(dt), &K::version(dt), &K::kind(dt))
 }
 
 impl<K> Stream for TypedReflectHandle<K>
@@ -180,7 +180,7 @@ where
                 Some(event) => {
                     let obj = match event {
                         Event::InitApply(obj) | Event::Apply(obj)
-                            if gvk(&obj) == Some(typed_gvk::<K>(Default::default())) =>
+                            if gvk(&obj) == Some(typed_gvk::<K>(&Default::default())) =>
                         {
                             obj.try_parse::<K>()
                                 .ok()
@@ -190,7 +190,7 @@ where
                                 .map(Arc::new)
                         }
                         Event::Delete(obj)
-                            if gvk(&obj) == Some(typed_gvk::<K>(Default::default())) =>
+                            if gvk(&obj) == Some(typed_gvk::<K>(&Default::default())) =>
                         {
                             obj.try_parse::<K>()
                                 .ok()

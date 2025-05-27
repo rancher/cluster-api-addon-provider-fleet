@@ -10,7 +10,9 @@ use crate::api::fleet_clustergroup::ClusterGroup;
 use crate::controllers::addon_config::to_dynamic_event;
 use futures::StreamExt as _;
 use k8s_openapi::api::core::v1::Namespace;
-use kube::api::{ApiResource, ListParams, Object, PatchParams};
+use kube::api::{
+    ApiResource, DeleteParams, DynamicObject, GroupVersionKind, ListParams, PatchParams,
+};
 
 use kube::client::scope;
 use kube::runtime::watcher::{self, Config};
@@ -46,9 +48,9 @@ struct TemplateValues {
     #[serde(rename = "Cluster")]
     cluster: Cluster,
     #[serde(rename = "ControlPlane")]
-    control_plane: Object<Value, Value>,
+    control_plane: DynamicObject,
     #[serde(rename = "InfrastructureCluster")]
-    infrastructure_cluster: Object<Value, Value>,
+    infrastructure_cluster: DynamicObject,
 }
 
 impl TemplateSources {
@@ -62,22 +64,49 @@ impl TemplateSources {
 
         cluster.status = None;
         cluster.meta_mut().managed_fields = None;
+        cluster.meta_mut().resource_version = None;
 
-        let mut control_plane: Object<Value, Value> = client
-            .fetch(self.0.spec.control_plane_ref.as_ref()?)
-            .await
-            .ok()?;
+        let reference = self.0.spec.proxy.control_plane_ref.as_ref()?;
+        let api_version = reference.api_version.as_ref()?;
+        let (group, version) = api_version.split_once('/').unwrap_or(("", api_version));
+        let resource = ApiResource::from_gvk(&GroupVersionKind::gvk(
+            group,
+            version,
+            reference.kind.as_ref()?,
+        ));
+        let api = Api::<DynamicObject>::namespaced_with(
+            client.clone(),
+            reference.namespace.as_ref()?,
+            &resource,
+        );
+        let mut control_plane = api.get(reference.name.as_ref()?).await.ok()?;
 
-        control_plane.status = None;
+        if let Some(data_object) = control_plane.data.as_object_mut() {
+            data_object.remove("status");
+        }
         control_plane.meta_mut().managed_fields = None;
+        control_plane.meta_mut().resource_version = None;
 
-        let mut infrastructure_cluster: Object<Value, Value> = client
-            .fetch(self.0.spec.infrastructure_ref.as_ref()?)
-            .await
-            .ok()?;
+        let infra_reference = self.0.spec.proxy.infrastructure_ref.as_ref()?;
+        let api_version = infra_reference.api_version.as_ref()?;
+        let (group, version) = api_version.split_once('/').unwrap_or(("", api_version));
+        let resource = ApiResource::from_gvk(&GroupVersionKind::gvk(
+            group,
+            version,
+            infra_reference.kind.as_ref()?,
+        ));
+        let api = Api::<DynamicObject>::namespaced_with(
+            client.clone(),
+            infra_reference.namespace.as_ref()?,
+            &resource,
+        );
+        let mut infrastructure_cluster = api.get(infra_reference.name.as_ref()?).await.ok()?;
 
-        infrastructure_cluster.status = None;
+        if let Some(data_object) = infrastructure_cluster.data.as_object_mut() {
+            data_object.remove("status");
+        }
         infrastructure_cluster.meta_mut().managed_fields = None;
+        infrastructure_cluster.meta_mut().resource_version = None;
 
         let values = TemplateValues {
             cluster,
@@ -112,21 +141,18 @@ impl FleetBundle for FleetClusterBundle {
 
                 let class_namespace = mapping.namespace().unwrap_or_default();
                 let cluster_namespace = mapping.name_any();
-                info!("Updated BundleNamespaceMapping for cluster {cluster_name} between class namespace: {class_namespace} and cluster namespace: {cluster_namespace}")
-            };
+                info!("Updated BundleNamespaceMapping for cluster {cluster_name} between class namespace: {class_namespace} and cluster namespace: {cluster_namespace}");
+            }
         }
 
-        match self.config.cluster_patch_enabled() {
-            true => {
-                patch(
-                    ctx.clone(),
-                    cluster,
-                    &PatchParams::apply("addon-provider-fleet"),
-                )
-                .await?
-            }
-            false => get_or_create(ctx.clone(), cluster).await?,
-        };
+        if self.config.cluster_patch_enabled() {
+            patch(
+                ctx.clone(),
+                cluster,
+                &PatchParams::apply("addon-provider-fleet"),
+            )
+            .await?
+        } else { get_or_create(ctx.clone(), cluster).await? };
 
         #[cfg(feature = "agent-initiated")]
         if let Some(cluster_registration_token) = self.cluster_registration_token.as_ref() {
@@ -143,7 +169,7 @@ impl FleetBundle for FleetClusterBundle {
                 )
                 .await
                 .map_err(ClusterSyncError::GroupPatchError)?;
-            };
+            }
         }
 
         Ok(Action::await_change())
@@ -171,7 +197,7 @@ impl FleetBundle for FleetClusterBundle {
             }
 
             Api::<BundleNamespaceMapping>::namespaced(ctx.client.clone(), &ns.unwrap_or_default())
-                .delete(&mapping.name_any(), &Default::default())
+                .delete(&mapping.name_any(), &DeleteParams::default())
                 .await?;
         }
 
@@ -207,6 +233,7 @@ impl FleetController for Cluster {
 }
 
 impl Cluster {
+    #[must_use]
     pub fn cluster_ready(&self) -> Option<&Self> {
         let status = self.status.clone()?;
         let cp_ready = status.control_plane_ready.filter(|&ready| ready);
@@ -217,6 +244,11 @@ impl Cluster {
         ready_condition.or(cp_ready).map(|_| self)
     }
 
+    /// Adds a dynamic watcher for a specific namespace.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the watcher cannot be created or added to the stream.
     pub async fn add_namespace_dynamic_watch(
         ns: Arc<Namespace>,
         ctx: Arc<Context>,
