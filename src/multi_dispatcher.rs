@@ -3,7 +3,6 @@ use std::{
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
-    time::Duration,
 };
 
 use async_broadcast::{InactiveReceiver, Receiver, Sender};
@@ -19,7 +18,6 @@ use kube::{
 };
 use pin_project::pin_project;
 use serde::de::DeserializeOwned;
-use tokio::time::sleep;
 
 #[derive(Clone)]
 pub struct MultiDispatcher {
@@ -71,11 +69,6 @@ impl MultiDispatcher {
                 let _ = self.dispatch_tx.broadcast_direct(ev.clone()).await;
             }
         }
-    }
-
-    // Subscribers count returns the number of current receiving streams
-    pub(crate) fn subscribers_count(&self) -> usize {
-        self.dispatch_tx.receiver_count()
     }
 }
 
@@ -230,10 +223,6 @@ where
     W: Stream<Item = Result<Event<DynamicObject>>> + Unpin,
 {
     stream! {
-        while writer.subscribers_count() == 0 {
-            sleep(Duration::from_millis(100)).await;
-        }
-
         while let Some(event) = broadcast.next().await {
             match event {
                 Ok(ev) => {
