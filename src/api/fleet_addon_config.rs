@@ -182,6 +182,11 @@ impl FleetAddonConfigSpec {
     pub(crate) fn feature_gates(&self) -> Option<&FeatureGates> {
         self.config.as_ref()?.feature_gates.as_ref()
     }
+
+    /// Returns the value of bootstrap_local_cluster if defined.
+    pub(crate) fn bootstrap(&self) -> Option<bool> {
+        self.config.as_ref()?.bootstrap_local_cluster
+    }
 }
 
 impl ClusterConfig {
@@ -263,9 +268,14 @@ impl Default for ClusterConfig {
 #[serde(rename_all = "camelCase")]
 pub struct FleetConfig {
     /// fleet server url configuration options
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub server: Option<Server>,
     /// feature gates controlling experimental features
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub feature_gates: Option<FeatureGates>,
+    /// Enable auto-installation of a fleet agent in the local cluster.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bootstrap_local_cluster: Option<bool>,
 }
 
 impl Default for FleetConfig {
@@ -273,6 +283,7 @@ impl Default for FleetConfig {
         Self {
             server: Default::default(),
             feature_gates: Some(FeatureGates::default()),
+            bootstrap_local_cluster: None,
         }
     }
 }
