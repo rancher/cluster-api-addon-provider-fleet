@@ -23,7 +23,7 @@ use tracing::field::display;
 use std::fmt::Debug;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Barrier, RwLock};
 use tracing::{self, debug, info, instrument, Span};
 
 use super::{
@@ -51,6 +51,8 @@ pub struct Context {
     pub stream: BroadcastStream<DynamicStream>,
     // k8s minor version
     pub version: u32,
+    // Controller readiness barrier
+    pub barrier: Arc<Barrier>,
 }
 
 #[instrument(skip_all, fields(name = res.name_any(), namespace = res.namespace(), api_version = typed_gvk::<R>(()).api_version(), kind = R::kind(&()).to_string()), err)]

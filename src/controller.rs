@@ -29,6 +29,7 @@ use kube::{
     },
 };
 use kube::{Resource, ResourceExt};
+use tokio::sync::Barrier;
 
 use std::collections::BTreeMap;
 
@@ -56,6 +57,9 @@ pub struct State {
 
     // k8s api server minor version
     pub version: u32,
+
+    // Controller readiness barrier
+    pub barrier: Arc<Barrier>,
 }
 
 #[derive(Parser, Debug, Clone, Default)]
@@ -76,6 +80,7 @@ impl State {
             diagnostics: Default::default(),
             stream: BroadcastStream::new(Default::default()),
             version,
+            barrier: Arc::new(Barrier::new(3)),
         }
     }
 
@@ -98,6 +103,7 @@ impl State {
             dispatcher: self.dispatcher.clone(),
             stream: self.stream.clone(),
             version: self.version,
+            barrier: self.barrier.clone(),
         })
     }
 }
@@ -180,6 +186,9 @@ pub async fn run_fleet_addon_config_controller(state: State) {
     .update_watches(state.to_context(client.clone()))
     .await
     .expect("Initial dynamic watches setup to succeed");
+
+    // Signal that this controller is ready
+    state.barrier.wait().await;
 
     tokio::select! {
         _ = watcher => {panic!("This should not happen before controllers exit")},
@@ -324,6 +333,9 @@ pub async fn run_cluster_controller(state: State) {
         .default_backoff()
         .for_each(|_| futures::future::ready(()));
 
+    // Signal that this controller is ready
+    state.barrier.wait().await;
+
     tokio::join!(clusters, ns_controller);
 }
 
@@ -373,6 +385,9 @@ pub async fn run_cluster_class_controller(state: State) {
         )
         .default_backoff()
         .for_each(|_| futures::future::ready(()));
+
+    // Signal that this controller is ready
+    state.barrier.wait().await;
 
     tokio::join!(group_controller, cluster_class_controller);
 }
