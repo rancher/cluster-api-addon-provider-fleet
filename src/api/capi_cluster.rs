@@ -16,6 +16,8 @@ use rand::distr::{Alphanumeric, SampleString as _};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::predicates::annotation_filter;
+
 use super::{
     bundle_namespace_mapping::BundleNamespaceMapping,
     fleet_addon_config::ClusterConfig,
@@ -97,7 +99,10 @@ impl Cluster {
         let class = self.cluster_class_name();
         let ns = self.namespace().unwrap_or_default();
         let class_namespace = self.cluster_class_namespace().unwrap_or(&ns);
-        let annotations = self.annotations().clone();
+        let filtered_annotations = self.annotations().clone()
+            .into_iter()
+            .filter(|(key, _)| annotation_filter(key.as_ref()))
+            .collect();
         let labels = {
             let mut labels = self.labels().clone();
             if let Some(class) = class {
@@ -113,7 +118,7 @@ impl Cluster {
         fleet_cluster::Cluster {
             types: Some(TypeMeta::resource::<fleet_cluster::Cluster>()),
             metadata: ObjectMeta {
-                annotations: Some(annotations),
+                annotations: Some(filtered_annotations),
                 labels: Some(labels),
                 owner_references: config
                     .set_owner_references
@@ -215,5 +220,29 @@ impl Cluster {
 
     pub(crate) fn cluster_class_name(&self) -> Option<&str> {
         Some(&self.spec.proxy.topology.as_ref()?.class)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+    use cluster_api_rs::capi_cluster::ClusterSpec;
+    use super::{Cluster, ClusterProxy};
+
+    #[test]
+    fn test_cluster_annotations_filter() {
+        let mut annotations = BTreeMap::new();
+        annotations.insert(String::from("foo"), String::from("bar"));
+        annotations.insert(String::from("kubectl.kubernetes.io/last-applied-configuration"), String::from("foo"));
+        annotations.insert(String::from("kubernetes.io/foo"), String::from("bar"));
+        annotations.insert(String::from("k8s.io/foo"), String::from("bar"));
+        let spec =  ClusterProxy{proxy: ClusterSpec{..Default::default()}};
+        let mut capi_cluster = Cluster::new("test", spec);
+        capi_cluster.metadata.annotations = Some(annotations);
+        let fleet_cluster = capi_cluster.to_cluster(None);
+
+        let mut want_annotations = BTreeMap::new();
+        want_annotations.insert(String::from("foo"), String::from("bar"));
+        assert_eq!(fleet_cluster.metadata.annotations.unwrap(), want_annotations)
     }
 }

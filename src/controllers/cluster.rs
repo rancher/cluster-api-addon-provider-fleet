@@ -8,6 +8,7 @@ use crate::api::fleet_cluster::{self};
 use crate::api::fleet_cluster_registration_token::ClusterRegistrationToken;
 use crate::api::fleet_clustergroup::ClusterGroup;
 use crate::controllers::addon_config::to_dynamic_event;
+use crate::predicates::annotation_filter;
 use futures::StreamExt as _;
 use k8s_openapi::api::core::v1::Namespace;
 use kube::api::{
@@ -65,6 +66,10 @@ impl TemplateSources {
         cluster.status = None;
         cluster.meta_mut().managed_fields = None;
         cluster.meta_mut().resource_version = None;
+        cluster.metadata.annotations = Some(cluster.annotations().clone()
+            .into_iter()
+            .filter(|(key, _)| annotation_filter(key.as_ref()))
+            .collect());
 
         let reference = self.0.spec.proxy.control_plane_ref.as_ref()?;
         let api_version = reference.api_version.as_ref()?;
