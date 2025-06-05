@@ -1,6 +1,7 @@
 pub mod bundle_namespace_mapping;
 pub mod capi_cluster;
 pub mod capi_clusterclass;
+pub mod comparable;
 pub mod fleet_addon_config;
 pub mod fleet_cluster;
 #[cfg(feature = "agent-initiated")]

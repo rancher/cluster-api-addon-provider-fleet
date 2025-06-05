@@ -561,6 +561,7 @@ dependencies = [
  "chrono",
  "clap",
  "cluster-api-rs",
+ "educe",
  "fleet-api-rs",
  "futures",
  "http 1.3.1",

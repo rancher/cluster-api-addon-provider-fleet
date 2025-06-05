@@ -2,7 +2,9 @@ use std::io;
 
 use controllers::{
     BundleError, SyncError,
-    addon_config::{AddonConfigSyncError, DynamicWatcherError, FleetPatchError},
+    addon_config::{
+        AddonConfigSyncError, DynamicWatcherError, FleetPatchError, ReconcileConfigSyncError,
+    },
     helm,
 };
 use futures::channel::mpsc::TrySendError;
@@ -39,6 +41,9 @@ pub enum Error {
 
     #[error("Dynamic watcher error: {0}")]
     DynamicWatcherError(#[from] DynamicWatcherError),
+
+    #[error("Reconcile config sync error: {0}")]
+    ReconcileConfigSync(#[from] ReconcileConfigSyncError),
 
     #[error("Namespace trigger error: {0}")]
     TriggerError(#[from] TrySendError<()>),
