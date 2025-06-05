@@ -515,13 +515,13 @@ pub type ReconcileConfigSyncResult<T> = std::result::Result<T, ReconcileConfigSy
 
 #[derive(Error, Debug)]
 pub enum ReconcileConfigSyncError {
-    #[error("Kube Error: {0}")]
-    KubeError(#[from] kube::Error),
+    #[error("Fleet config map fetch error: {0}")]
+    FleetConfigFetch(#[from] kube::Error),
 
     #[error("Addon config sync error: {0}")]
     AddonConfigSync(#[from] AddonConfigSyncError),
 
-    #[error("Patch error: {0}")]
+    #[error("Fleet config map patch error: {0}")]
     Patch(#[from] PatchError),
 }
 

@@ -37,7 +37,6 @@ pub struct BundleNamespaceMapping {
 
 impl ResourceDiff for BundleNamespaceMapping {
     fn diff(&self, other: &Self) -> bool {
-        self.bundle_selector != other.bundle_selector
-            || self.namespace_selector != other.namespace_selector
+        self != other
     }
 }

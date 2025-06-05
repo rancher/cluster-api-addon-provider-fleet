@@ -25,7 +25,23 @@ impl ResourceDiff for Cluster {
             return true;
         }
 
-        let spec_equal = self.spec.template_values == other.spec.template_values
+        let template_values_equal = self
+            .spec
+            .template_values
+            .as_ref()
+            .unwrap_or(&std::collections::BTreeMap::new())
+            .iter()
+            .all(|(k, v)| {
+                other
+                    .spec
+                    .template_values
+                    .as_ref()
+                    .unwrap_or(&std::collections::BTreeMap::new())
+                    .get(k)
+                    == Some(v)
+            });
+
+        let spec_equal = template_values_equal
             && self.spec.agent_namespace == other.spec.agent_namespace
             && self.spec.host_network == other.spec.host_network
             && self.spec.agent_env_vars == other.spec.agent_env_vars
