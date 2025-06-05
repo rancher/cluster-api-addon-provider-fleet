@@ -45,7 +45,7 @@ test-unit:
   cargo test
 
 # run clippy
-clippy:
+clippy: fmt
   cargo clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic
 
 # compile for musl (for docker image)

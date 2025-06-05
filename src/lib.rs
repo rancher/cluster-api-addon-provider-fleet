@@ -1,8 +1,9 @@
 use std::io;
 
 use controllers::{
+    BundleError, SyncError,
     addon_config::{AddonConfigSyncError, DynamicWatcherError, FleetPatchError},
-    helm, BundleError, SyncError,
+    helm,
 };
 use futures::channel::mpsc::TrySendError;
 use thiserror::Error;

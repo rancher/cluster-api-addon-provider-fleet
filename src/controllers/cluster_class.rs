@@ -10,7 +10,7 @@ use kube::runtime::controller::Action;
 use std::sync::Arc;
 
 use super::controller::{
-    fetch_config, get_or_create, patch, Context, FleetBundle, FleetController,
+    Context, FleetBundle, FleetController, fetch_config, get_or_create, patch,
 };
 use super::{BundleResult, GroupSyncResult};
 

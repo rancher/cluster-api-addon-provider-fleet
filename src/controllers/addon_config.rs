@@ -8,6 +8,7 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
 };
 use kube::{
+    Api, Resource, ResourceExt,
     api::{ApiResource, DynamicObject, ObjectMeta, Patch, PatchParams, TypeMeta},
     client::scope::Namespace,
     core::object::HasSpec,
@@ -15,13 +16,12 @@ use kube::{
         controller::Action,
         watcher::{self, Config, Event},
     },
-    Api, Resource, ResourceExt,
 };
-use serde::{de::DeserializeOwned, ser, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser};
 use serde_json::Value;
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as};
 use thiserror::Error;
-use tracing::{field::display, info, instrument, Span};
+use tracing::{Span, field::display, info, instrument};
 
 use crate::{
     api::{
@@ -34,12 +34,12 @@ use crate::{
 };
 
 use super::{
-    controller::{patch, Context},
+    PatchError,
+    controller::{Context, patch},
     helm::{
         self,
         install::{ChartSearch, FleetChart, HelmOperation},
     },
-    PatchError,
 };
 
 #[derive(Resource, Serialize, Deserialize, Default, Clone, Debug)]
@@ -233,7 +233,9 @@ impl FleetAddonConfig {
             );
         }
 
-        info!("Reconciled dynamic watches to match selectors: namespace={ns_selector}, cluster={cluster_selector}");
+        info!(
+            "Reconciled dynamic watches to match selectors: namespace={ns_selector}, cluster={cluster_selector}"
+        );
         Ok(Action::await_change())
     }
 
