@@ -84,6 +84,9 @@ pub type PatchResult<T, E = PatchError> = std::result::Result<T, E>;
 
 #[derive(Error, Debug)]
 pub enum PatchError {
+    #[error("Get error: {0}")]
+    Get(#[source] kube::Error),
+
     #[error("Patch error: {0}")]
     Patch(#[source] kube::Error),
 

@@ -5,9 +5,9 @@ use crate::api::fleet_addon_config::FleetAddonConfig;
 use crate::api::fleet_cluster;
 use crate::api::fleet_clustergroup::ClusterGroup;
 use crate::controllers::addon_config::FleetConfig;
-use crate::controllers::controller::{fetch_config, Context, DynamicStream, FleetController};
+use crate::controllers::controller::{Context, DynamicStream, FleetController, fetch_config};
 use crate::metrics::Diagnostics;
-use crate::multi_dispatcher::{broadcaster, BroadcastStream, MultiDispatcher};
+use crate::multi_dispatcher::{BroadcastStream, MultiDispatcher, broadcaster};
 use crate::{Error, Metrics};
 
 use chrono::Local;
@@ -17,9 +17,10 @@ use futures::{Stream, StreamExt};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{Condition, Time};
 use kube::api::{Patch, PatchParams};
 use kube::core::DeserializeGuard;
-use kube::runtime::reflector::store::Writer;
 use kube::runtime::reflector::ObjectRef;
-use kube::runtime::{metadata_watcher, predicates, reflector, watcher, WatchStreamExt};
+use kube::runtime::reflector::store::Writer;
+use kube::runtime::{WatchStreamExt, metadata_watcher, predicates, reflector, watcher};
+use kube::{Resource, ResourceExt};
 use kube::{
     api::Api,
     client::Client,
@@ -28,7 +29,6 @@ use kube::{
         watcher::Config,
     },
 };
-use kube::{Resource, ResourceExt};
 use tokio::sync::Barrier;
 
 use std::collections::BTreeMap;

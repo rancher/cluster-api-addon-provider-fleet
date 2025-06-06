@@ -16,8 +16,8 @@ use kube::api::{
 
 use kube::client::scope;
 use kube::runtime::watcher::{self, Config};
-use kube::{api::ResourceExt, runtime::controller::Action, Resource};
 use kube::{Api, Client};
+use kube::{Resource, api::ResourceExt, runtime::controller::Action};
 use serde::Serialize;
 use serde_json::Value;
 use tracing::info;
@@ -25,7 +25,7 @@ use tracing::info;
 use std::sync::Arc;
 
 use super::controller::{
-    fetch_config, get_or_create, patch, Context, FleetBundle, FleetController,
+    Context, FleetBundle, FleetController, fetch_config, get_or_create, patch,
 };
 use super::{BundleResult, ClusterSyncError, ClusterSyncResult};
 
@@ -141,7 +141,9 @@ impl FleetBundle for FleetClusterBundle {
 
                 let class_namespace = mapping.namespace().unwrap_or_default();
                 let cluster_namespace = mapping.name_any();
-                info!("Updated BundleNamespaceMapping for cluster {cluster_name} between class namespace: {class_namespace} and cluster namespace: {cluster_namespace}");
+                info!(
+                    "Updated BundleNamespaceMapping for cluster {cluster_name} between class namespace: {class_namespace} and cluster namespace: {cluster_namespace}"
+                );
             }
         }
 
@@ -152,7 +154,9 @@ impl FleetBundle for FleetClusterBundle {
                 &PatchParams::apply("addon-provider-fleet"),
             )
             .await?
-        } else { get_or_create(ctx.clone(), cluster).await? };
+        } else {
+            get_or_create(ctx.clone(), cluster).await?
+        };
 
         #[cfg(feature = "agent-initiated")]
         if let Some(cluster_registration_token) = self.cluster_registration_token.as_ref() {

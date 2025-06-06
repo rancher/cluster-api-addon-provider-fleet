@@ -1,18 +1,20 @@
 use std::{fmt::Display, str::FromStr};
 
+use crate::api::comparable::ResourceDiff;
+use educe::Educe;
 use fleet_api_rs::fleet_cluster::{ClusterAgentEnvVars, ClusterAgentTolerations};
 use k8s_openapi::{
     api::core::v1::{ConfigMap, ObjectReference},
     apimachinery::pkg::apis::meta::v1::{Condition, LabelSelector},
 };
 use kube::{
+    CustomResource, KubeSchema, Resource,
     api::{ObjectMeta, TypeMeta},
     core::{ParseExpressionError, Selector},
-    CustomResource, KubeSchema, Resource,
 };
 use schemars::JsonSchema;
-use serde::{ser, Deserialize, Serialize};
-use serde_with::{serde_as, DisplayFromStr};
+use serde::{Deserialize, Serialize, ser};
+use serde_with::{DisplayFromStr, serde_as};
 use serde_yaml::Value;
 
 pub const AGENT_NAMESPACE: &str = "fleet-addon-agent";
@@ -20,7 +22,7 @@ pub const EXPERIMENTAL_OCI_STORAGE: &str = "EXPERIMENTAL_OCI_STORAGE";
 pub const EXPERIMENTAL_HELM_OPS: &str = "EXPERIMENTAL_HELM_OPS";
 
 /// This provides a config for fleet addon functionality
-#[derive(CustomResource, Deserialize, Serialize, Clone, Default, Debug, KubeSchema)]
+#[derive(CustomResource, Deserialize, Serialize, Clone, Default, Debug, KubeSchema, PartialEq)]
 #[kube(
     kind = "FleetAddonConfig",
     group = "addons.cluster.x-k8s.io",
@@ -63,6 +65,11 @@ impl Default for FleetAddonConfig {
         }
     }
 }
+impl ResourceDiff for FleetAddonConfig {
+    fn diff(&self, _: &Self) -> bool {
+        true
+    }
+}
 
 #[derive(Deserialize, Serialize, Clone, Default, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -73,7 +80,7 @@ pub struct FleetAddonConfigStatus {
     pub conditions: Vec<Condition>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ClusterClassConfig {
     /// Setting to disable setting owner references on the created resources
@@ -95,7 +102,7 @@ impl Default for ClusterClassConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ClusterConfig {
     /// Apply a `ClusterGroup` for a `ClusterClass` referenced from a different namespace.
@@ -152,13 +159,21 @@ pub struct FleetSettings {
     pub data: Option<FleetSettingsSpec>,
 }
 
+impl ResourceDiff for FleetSettings {
+    fn diff(&self, other: &Self) -> bool {
+        self.data != other.data
+    }
+}
+
 #[serde_as]
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, Educe)]
+#[educe(PartialEq)]
 pub struct FleetSettingsSpec {
     #[serde(default)]
     #[serde_as(as = "DisplayFromStr")]
     pub fleet: FleetChartValues,
 
+    #[educe(PartialEq(ignore))]
     #[serde(flatten)]
     pub other: Value,
 }
@@ -238,7 +253,7 @@ impl ClusterConfig {
 }
 
 /// `NamingStrategy` is controlling Fleet cluster naming
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default, PartialEq)]
 pub struct NamingStrategy {
     /// Specify a prefix for the Cluster name, applied to created Fleet cluster
     pub prefix: Option<String>,
@@ -264,7 +279,7 @@ impl Default for ClusterConfig {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FleetConfig {
     /// fleet server url configuration options
@@ -290,7 +305,7 @@ impl Default for FleetConfig {
 
 /// Feature toggles for enabling or disabling experimental functionality.
 /// This struct controls access to specific experimental features.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FeatureGates {
     /// Enables experimental OCI  storage support.
@@ -360,7 +375,7 @@ impl Default for FeatureGates {
 
 /// `FeaturesConfigMap` references a `ConfigMap` where to apply feature flags.
 /// If a `ConfigMap` is referenced, the controller will update it instead of upgrading the Fleet chart.
-#[derive(Clone, Default, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FeaturesConfigMap {
     // The reference to a ConfigMap resource
@@ -369,7 +384,7 @@ pub struct FeaturesConfigMap {
 }
 
 /// `FleetChartValues` represents Fleet chart values.
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FleetChartValues {
     pub extra_env: Option<Vec<EnvironmentVariable>>,
@@ -378,14 +393,14 @@ pub struct FleetChartValues {
 }
 
 /// `EnvironmentVariable` is a simple name/value pair.
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvironmentVariable {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FleetInstall {
     /// Chart version to install
@@ -421,14 +436,14 @@ impl Default for Install {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum Server {
     InferLocal(bool),
     Custom(InstallOptions),
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallOptions {
     pub api_server_ca_config_ref: Option<ObjectReference>,
@@ -450,7 +465,7 @@ impl NamingStrategy {
 }
 
 /// Selectors is controlling Fleet import strategy settings.
-#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Selectors {
     /// Namespace label selector. If set, only clusters in the namespace matching label selector will be imported.

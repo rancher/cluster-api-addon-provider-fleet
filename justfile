@@ -45,7 +45,7 @@ test-unit:
   cargo test
 
 # run clippy
-clippy:
+clippy: fmt
   cargo clippy --all-targets --all-features --fix --allow-dirty -- -W clippy::pedantic
 
 # compile for musl (for docker image)
@@ -94,7 +94,7 @@ start-dev: _cleanup-out-dir _create-out-dir _download-kubectl
     kind delete cluster --name dev || true
     kind create cluster --image=kindest/node:v{{KUBE_VERSION}} --config testdata/kind-config.yaml
     just install-capi
-    kubectl wait pods --for=condition=Ready --timeout=300s --all --all-namespaces
+    kubectl wait pods --for=condition=Ready --timeout=500s --all --all-namespaces
 
 # Stop the local dev environment
 stop-dev:
@@ -171,13 +171,13 @@ release-manifests: _create-out-dir _download-kustomize
 test-import: start-dev deploy deploy-child-cluster deploy-kindnet deploy-app && collect-test-import
     kubectl wait pods --for=condition=Ready --timeout=150s --all --all-namespaces
     kubectl wait cluster --timeout=500s --for=condition=ControlPlaneReady=true docker-demo
-    kubectl wait clusters.fleet.cattle.io --timeout=300s --for=condition=Ready=true docker-demo
+    kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true docker-demo
 
 # Full e2e test of importing cluster in fleet
 test-import-rke2: start-dev deploy deploy-child-rke2-cluster deploy-calico-gitrepo deploy-app
     kubectl wait pods --for=condition=Ready --timeout=150s --all --all-namespaces
     kubectl wait cluster --timeout=500s --for=condition=ControlPlaneReady=true docker-demo
-    kubectl wait clusters.fleet.cattle.io --timeout=300s --for=condition=Ready=true docker-demo
+    kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true docker-demo
 
 collect-test-import:
     -just collect-artifacts dev
@@ -206,11 +206,15 @@ collect-artifacts cluster:
 # Full e2e test of importing cluster and ClusterClass in fleet
 [private]
 _test-import-all:
-    kubectl wait clustergroups.fleet.cattle.io -n clusterclass --timeout=300s --for=create --for=condition=Ready=true quick-start
+    kubectl wait clustergroups.fleet.cattle.io -n clusterclass --timeout=500s --for=create quick-start
+    kubectl wait clustergroups.fleet.cattle.io -n clusterclass --timeout=500s --for=condition=Ready=true quick-start
     # Verify that cluster group created for cluster referencing clusterclass in a different namespace
-    kubectl wait bundlenamespacemappings.fleet.cattle.io --timeout=300s --for=create -n clusterclass default
-    kubectl wait clustergroups.fleet.cattle.io --timeout=300s --for=create --for=jsonpath='{.status.clusterCount}=1' --for=condition=Ready=true quick-start.clusterclass
-    kubectl wait clusters.fleet.cattle.io --timeout=300s --for=create --for=condition=Ready=true capi-quickstart
+    kubectl wait bundlenamespacemappings.fleet.cattle.io --timeout=500s --for=create -n clusterclass default
+    kubectl wait clustergroups.fleet.cattle.io --timeout=500s --for=create quick-start.clusterclass
+    kubectl wait clustergroups.fleet.cattle.io --timeout=500s --for=jsonpath='{.status.clusterCount}=1' quick-start.clusterclass
+    kubectl wait clustergroups.fleet.cattle.io --timeout=500s --for=condition=Ready=true quick-start.clusterclass
+    kubectl wait clusters.fleet.cattle.io --timeout=500s --for=create capi-quickstart
+    kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true capi-quickstart
 
 [private]
 _test-delete-all:

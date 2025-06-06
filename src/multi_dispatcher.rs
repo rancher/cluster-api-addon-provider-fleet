@@ -7,14 +7,14 @@ use std::{
 
 use async_broadcast::{InactiveReceiver, Receiver, Sender};
 use async_stream::stream;
-use futures::{lock::Mutex, ready, Stream, StreamExt as _};
+use futures::{Stream, StreamExt as _, lock::Mutex, ready};
 use kube::{
+    Resource,
     api::{DynamicObject, GroupVersionKind},
     runtime::{
-        reflector::{store::Writer, Lookup, Store},
+        reflector::{Lookup, Store, store::Writer},
         watcher::{Event, Result},
     },
-    Resource,
 };
 use pin_project::pin_project;
 use serde::de::DeserializeOwned;
