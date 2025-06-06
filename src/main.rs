@@ -1,7 +1,7 @@
 use actix_web::{
-    get, middleware, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
+    App, HttpRequest, HttpResponse, HttpServer, Responder, get, middleware, web::Data,
 };
-pub use controller::{self, telemetry, State};
+pub use controller::{self, State, telemetry};
 use kube::Client;
 use prometheus::{Encoder, TextEncoder};
 

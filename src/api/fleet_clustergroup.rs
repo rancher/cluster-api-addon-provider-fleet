@@ -1,18 +1,19 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use fleet_api_rs::fleet_clustergroup::{
     ClusterGroupSelector, ClusterGroupSpec, ClusterGroupStatus,
 };
 use k8s_openapi::api::core::v1::ObjectReference;
 use kube::{
+    Resource, ResourceExt as _,
     api::{ObjectMeta, TypeMeta},
     core::{Expression, Selector},
     runtime::reflector::ObjectRef,
-    Resource, ResourceExt as _,
 };
 use serde::{Deserialize, Serialize};
 
 use super::capi_clusterclass::ClusterClass;
+use crate::api::comparable::ResourceDiff;
 
 pub static CLUSTER_CLASS_LABEL: &str = "clusterclass-name.fleet.addons.cluster.x-k8s.io";
 pub static CLUSTER_CLASS_NAMESPACE_LABEL: &str =
@@ -26,6 +27,32 @@ pub struct ClusterGroup {
     pub metadata: ObjectMeta,
     pub spec: ClusterGroupSpec,
     pub status: Option<ClusterGroupStatus>,
+}
+
+impl ResourceDiff for ClusterGroup {
+    fn diff(&self, other: &Self) -> bool {
+        let annotations_equal = self
+            .annotations()
+            .iter()
+            .all(|(k, v)| other.annotations().get(k) == Some(v));
+        let labels_equal = self
+            .labels()
+            .iter()
+            .all(|(k, v)| other.labels().get(k) == Some(v));
+
+        let owner_uids: HashSet<String> = other
+            .owner_references()
+            .iter()
+            .map(|r| &r.uid)
+            .cloned()
+            .collect();
+        let owner_references_equal = self
+            .owner_references()
+            .iter()
+            .all(|self_ref| owner_uids.contains(&self_ref.uid));
+
+        self.spec != other.spec || !annotations_equal || !labels_equal || !owner_references_equal
+    }
 }
 
 impl ClusterGroup {

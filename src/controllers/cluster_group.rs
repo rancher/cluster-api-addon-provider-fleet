@@ -9,7 +9,7 @@ use serde_json::json;
 use std::ops::Deref;
 use std::sync::Arc;
 
-use super::controller::{patch, Context, FLEET_FINALIZER};
+use super::controller::{Context, FLEET_FINALIZER, patch};
 use super::{GroupSyncResult, SyncError};
 
 impl ClusterGroup {

@@ -8,8 +8,8 @@ use fleet_api_rs::{
     fleet_clustergroup::{ClusterGroupSelector, ClusterGroupSpec},
 };
 use kube::{
-    api::{ObjectMeta, TypeMeta},
     CustomResource, Resource, ResourceExt as _,
+    api::{ObjectMeta, TypeMeta},
 };
 #[cfg(feature = "agent-initiated")]
 use rand::distr::{Alphanumeric, SampleString as _};
@@ -20,7 +20,7 @@ use super::{
     bundle_namespace_mapping::BundleNamespaceMapping,
     fleet_addon_config::ClusterConfig,
     fleet_cluster,
-    fleet_clustergroup::{ClusterGroup, CLUSTER_CLASS_LABEL, CLUSTER_CLASS_NAMESPACE_LABEL},
+    fleet_clustergroup::{CLUSTER_CLASS_LABEL, CLUSTER_CLASS_NAMESPACE_LABEL, ClusterGroup},
 };
 
 #[cfg(feature = "agent-initiated")]
