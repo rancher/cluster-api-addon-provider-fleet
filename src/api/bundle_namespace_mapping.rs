@@ -2,10 +2,12 @@ use fleet_api_rs::fleet_bundle_namespace_mapping::{
     BundleNamespaceMappingBundleSelector, BundleNamespaceMappingNamespaceSelector,
 };
 use kube::{
-    api::{ObjectMeta, TypeMeta},
     Resource,
+    api::{ObjectMeta, TypeMeta},
 };
 use serde::{Deserialize, Serialize};
+
+use crate::api::comparable::ResourceDiff;
 
 mod mapping {
     use kube::CustomResource;
@@ -31,4 +33,10 @@ pub struct BundleNamespaceMapping {
     pub metadata: ObjectMeta,
     pub bundle_selector: BundleNamespaceMappingBundleSelector,
     pub namespace_selector: BundleNamespaceMappingNamespaceSelector,
+}
+
+impl ResourceDiff for BundleNamespaceMapping {
+    fn diff(&self, other: &Self) -> bool {
+        self != other
+    }
 }

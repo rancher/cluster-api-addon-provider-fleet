@@ -1,12 +1,13 @@
+use crate::api::comparable::ResourceDiff;
 use crate::api::fleet_addon_config::FleetAddonConfig;
 use crate::controllers::PatchError;
 use crate::metrics::Diagnostics;
-use crate::multi_dispatcher::{typed_gvk, BroadcastStream, MultiDispatcher};
-use crate::{telemetry, Error, Metrics};
+use crate::multi_dispatcher::{BroadcastStream, MultiDispatcher, typed_gvk};
+use crate::{Error, Metrics, telemetry};
 use chrono::Utc;
 
-use futures::stream::SelectAll;
 use futures::Stream;
+use futures::stream::SelectAll;
 use k8s_openapi::NamespaceResourceScope;
 
 use kube::api::{DynamicObject, Patch, PatchParams, PostParams};
@@ -16,15 +17,15 @@ use kube::runtime::{finalizer, watcher};
 
 use kube::{api::Api, client::Client, runtime::controller::Action};
 
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use tracing::field::display;
 
 use std::fmt::Debug;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::{Barrier, RwLock};
-use tracing::{self, debug, info, instrument, Span};
+use tracing::{self, Span, debug, info, instrument};
 
 use super::{
     BundleResult, ConfigFetchResult, GetOrCreateError, GetOrCreateResult, PatchResult, SyncError,
@@ -119,12 +120,23 @@ pub(crate) async fn patch<R>(
 where
     R: Clone + Serialize + DeserializeOwned + Debug,
     R: kube::Resource<DynamicType = (), Scope = NamespaceResourceScope>,
-    R: kube::ResourceExt,
+    R: ResourceDiff,
 {
     let ns = res.namespace().unwrap_or(String::from("default"));
     let api: Api<R> = Api::namespaced(ctx.client.clone(), &ns);
 
     res.meta_mut().managed_fields = None;
+
+    // Perform patch after comparison
+    if let Some(existing) = api
+        .get_opt(&res.name_any())
+        .await
+        .map_err(PatchError::Get)?
+    {
+        if !res.diff(&existing) {
+            return Ok(Action::await_change());
+        }
+    }
 
     api.patch(&res.name_any(), pp, &Patch::Apply(&res))
         .await

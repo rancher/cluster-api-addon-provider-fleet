@@ -1,5 +1,6 @@
 use base64::prelude::*;
 use chrono::Local;
+use educe::Educe;
 use futures::StreamExt as _;
 use std::{fmt::Display, io, str::FromStr, sync::Arc, time::Duration};
 
@@ -8,24 +9,25 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
 };
 use kube::{
-    api::{ApiResource, DynamicObject, ObjectMeta, Patch, PatchParams, TypeMeta},
+    Api, Resource, ResourceExt,
+    api::{ApiResource, DynamicObject, ObjectMeta, PatchParams, TypeMeta},
     client::scope::Namespace,
     core::object::HasSpec,
     runtime::{
         controller::Action,
         watcher::{self, Config, Event},
     },
-    Api, Resource, ResourceExt,
 };
-use serde::{de::DeserializeOwned, ser, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser};
 use serde_json::Value;
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as};
 use thiserror::Error;
-use tracing::{field::display, info, instrument, Span};
+use tracing::{Span, field::display, info, instrument};
 
 use crate::{
     api::{
         capi_cluster::Cluster,
+        comparable::ResourceDiff,
         fleet_addon_config::{
             FeatureGates, FleetAddonConfig, FleetSettings, Install, InstallOptions, Server,
         },
@@ -34,12 +36,12 @@ use crate::{
 };
 
 use super::{
-    controller::{patch, Context},
+    PatchError,
+    controller::{Context, patch},
     helm::{
         self,
         install::{ChartSearch, FleetChart, HelmOperation},
     },
-    PatchError,
 };
 
 #[derive(Resource, Serialize, Deserialize, Default, Clone, Debug)]
@@ -51,14 +53,21 @@ pub struct FleetConfig {
     pub data: FleetConfigSpec,
 }
 
+impl ResourceDiff for FleetConfig {
+    fn diff(&self, other: &Self) -> bool {
+        self.data != other.data
+    }
+}
+
 #[serde_as]
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub struct FleetConfigSpec {
     #[serde_as(as = "DisplayFromStr")]
     pub config: FleetConfigData,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, Educe)]
+#[educe(PartialEq)]
 pub struct FleetConfigData {
     #[serde(rename = "apiServerURL")]
     pub api_server_url: String,
@@ -66,6 +75,7 @@ pub struct FleetConfigData {
     #[serde(rename = "apiServerCA")]
     pub api_server_ca: String,
 
+    #[educe(PartialEq(ignore))]
     #[serde(flatten)]
     pub other: Value,
 }
@@ -155,10 +165,10 @@ impl FleetAddonConfig {
     }
 
     #[instrument(skip_all, fields(reconcile_id, name = self.name_any(), namespace = self.namespace()))]
-    pub async fn reconcile_config_sync(
+    async fn sync_fleet_config(
         self: Arc<Self>,
         ctx: Arc<Context>,
-    ) -> crate::Result<Action> {
+    ) -> ReconcileConfigSyncResult<Action> {
         let _current = Span::current().record("reconcile_id", display(telemetry::get_trace_id()));
         let ns = Namespace::from("cattle-fleet-system");
         let mut fleet_config: FleetConfig = ctx.client.get("fleet-controller", &ns).await?;
@@ -173,17 +183,22 @@ impl FleetAddonConfig {
         fleet_config.meta_mut().managed_fields = None;
         fleet_config.types = Some(TypeMeta::resource::<FleetConfig>());
 
-        let api: Api<FleetConfig> = Api::namespaced(ctx.client.clone(), "cattle-fleet-system");
-        api.patch(
-            &fleet_config.name_any(),
+        patch(
+            ctx.clone(),
+            &mut fleet_config,
             &PatchParams::apply("addon-provider-fleet").force(),
-            &Patch::Apply(&fleet_config),
         )
         .await?;
 
-        info!("Updated fleet config map");
-
         Ok(Action::await_change())
+    }
+
+    #[instrument(skip_all, fields(reconcile_id, name = self.name_any(), namespace = self.namespace()))]
+    pub async fn reconcile_config_sync(
+        self: Arc<Self>,
+        ctx: Arc<Context>,
+    ) -> crate::Result<Action> {
+        Ok(self.sync_fleet_config(ctx).await?)
     }
 
     #[instrument(skip_all, fields(reconcile_id, name = self.name_any(), namespace = self.namespace()))]
@@ -233,7 +248,9 @@ impl FleetAddonConfig {
             );
         }
 
-        info!("Reconciled dynamic watches to match selectors: namespace={ns_selector}, cluster={cluster_selector}");
+        info!(
+            "Reconciled dynamic watches to match selectors: namespace={ns_selector}, cluster={cluster_selector}"
+        );
         Ok(Action::await_change())
     }
 
@@ -492,6 +509,20 @@ where
         watcher::Event::InitDone => watcher::Event::InitDone,
     };
     Ok(ev)
+}
+
+pub type ReconcileConfigSyncResult<T> = std::result::Result<T, ReconcileConfigSyncError>;
+
+#[derive(Error, Debug)]
+pub enum ReconcileConfigSyncError {
+    #[error("Fleet config map fetch error: {0}")]
+    FleetConfigFetch(#[from] kube::Error),
+
+    #[error("Addon config sync error: {0}")]
+    AddonConfigSync(#[from] AddonConfigSyncError),
+
+    #[error("Fleet config map patch error: {0}")]
+    Patch(#[from] PatchError),
 }
 
 pub type FleetPatchResult<T> = std::result::Result<T, FleetPatchError>;
