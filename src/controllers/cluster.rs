@@ -17,10 +17,10 @@ use kube::api::{
 use kube::client::scope;
 use kube::runtime::watcher::{self, Config};
 use kube::{Api, Client};
-use kube::{Resource, api::ResourceExt, runtime::controller::Action};
+use kube::{Resource, api::{ResourceExt, Patch}, runtime::controller::Action};
 use serde::Serialize;
-use serde_json::Value;
-use tracing::info;
+use serde_json::{Value,json};
+use tracing::{info,debug};
 
 use std::sync::Arc;
 
@@ -30,6 +30,7 @@ use super::controller::{
 use super::{BundleResult, ClusterSyncError, ClusterSyncResult};
 
 pub static CONTROLPLANE_READY_CONDITION: &str = "ControlPlaneReady";
+pub static FLEET_WORKSPACE_ANNOTATION: &str = "field.cattle.io/allow-fleetworkspace-creation-for-existing-namespace";
 
 pub struct FleetClusterBundle {
     template_sources: TemplateSources,
@@ -176,6 +177,19 @@ impl FleetBundle for FleetClusterBundle {
             }
         }
 
+        // Ensure the fleet workspace annotation is present.
+        let patch = json!({
+                        "metadata": {
+                            "annotations": {
+                                FLEET_WORKSPACE_ANNOTATION: "true"
+                            }
+                        }
+                    });
+        let namespace_name = self.fleet.namespace().unwrap_or_default();
+        let namespaces = Api::<Namespace>::all(ctx.client.clone());
+        namespaces.patch_metadata(&namespace_name,&PatchParams::default(), &Patch::Merge(&patch)).await?;
+        debug!("Added fleet annotation to namespace {}.", namespace_name);
+
         Ok(Action::await_change())
     }
 
@@ -203,6 +217,26 @@ impl FleetBundle for FleetClusterBundle {
             Api::<BundleNamespaceMapping>::namespaced(ctx.client.clone(), &ns.unwrap_or_default())
                 .delete(&mapping.name_any(), &DeleteParams::default())
                 .await?;
+        }
+
+        // List all other clusters in this namespace
+        let namespaces = Api::<Namespace>::all(ctx.client.clone());
+        let namespace_name = self.fleet.namespace().unwrap_or_default();
+        let clusters = Api::<Cluster>::namespaced(ctx.client.clone(), &namespace_name);
+        let other_clusters = clusters
+            .list(&ListParams::default().fields(&format!("metadata.namespace={},metadata.name!={}", namespace_name, self.fleet.name_any())))
+            .await?;
+        // If no other clusters are found in this namespace, remove the fleet workspace annotation.
+        if other_clusters.items.is_empty() {
+            let patch = json!({
+                "metadata": {
+                    "annotations": {
+                        FLEET_WORKSPACE_ANNOTATION: null
+                    }
+                }
+            });
+            namespaces.patch_metadata(&namespace_name,&PatchParams::default(), &Patch::Merge(&patch)).await?;
+            debug!("Removed fleet annotation from namespace {}.", namespace_name);
         }
 
         Ok(Action::await_change())
