@@ -349,10 +349,21 @@ pub async fn run_cluster_controller(state: State) {
         .default_backoff()
         .for_each(|_| futures::future::ready(()));
 
+    let cluster_ns_controller = Controller::new(
+        Api::<Cluster>::all(client.clone()),Default::default())
+        .shutdown_on_signal()
+        .run(
+            Cluster::reconcile_fleet_annotation_in_capi_ns,
+            error_policy,
+            state.to_context(client.clone()),
+        )
+        .default_backoff()
+        .for_each(|_| futures::future::ready(()));
+
     // Signal that this controller is ready
     state.barrier.wait().await;
 
-    tokio::join!(clusters, ns_controller);
+    tokio::join!(clusters, ns_controller, cluster_ns_controller);
 }
 
 /// Initialize the controller and shared state (given the crd is installed)
