@@ -172,6 +172,7 @@ test-import: start-dev deploy deploy-child-cluster deploy-kindnet deploy-app && 
     kubectl wait pods --for=condition=Ready --timeout=150s --all --all-namespaces
     kubectl wait cluster --timeout=500s --for=condition=ControlPlaneReady=true docker-demo
     kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true docker-demo
+    kubectl wait ns default --timeout=500s --for=jsonpath='{.metadata.annotations.field\.cattle\.io\/allow-fleetworkspace-creation-for-existing-namespace}=true'
 
 # Full e2e test of importing cluster in fleet
 test-import-rke2: start-dev deploy deploy-child-rke2-cluster deploy-calico-gitrepo deploy-app
