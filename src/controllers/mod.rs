@@ -31,6 +31,9 @@ pub enum ClusterSyncError {
     #[error("Cluster group update error: {0}")]
     GroupPatchError(#[source] PatchError),
 
+    #[error("Namespace annotations update error: {0}")]
+    NamespacePatchError(#[source] PatchError),
+
     #[error("Cluster BundleNamespaceMapping update error: {0}")]
     BundleNamespaceMappingError(#[source] PatchError),
 

@@ -1,5 +1,5 @@
 use crate::api::bundle_namespace_mapping::BundleNamespaceMapping;
-use crate::api::capi_cluster::Cluster;
+use crate::api::capi_cluster::{Cluster, FLEET_WORKSPACE_ANNOTATION};
 
 use crate::api::fleet_addon_config::FleetAddonConfig;
 use crate::api::fleet_cluster::{self};
@@ -8,6 +8,7 @@ use crate::api::fleet_cluster::{self};
 use crate::api::fleet_cluster_registration_token::ClusterRegistrationToken;
 use crate::api::fleet_clustergroup::ClusterGroup;
 use crate::controllers::addon_config::to_dynamic_event;
+use crate::controllers::controller::GetApi;
 use futures::StreamExt as _;
 use k8s_openapi::api::core::v1::Namespace;
 use kube::api::{
@@ -17,10 +18,14 @@ use kube::api::{
 use kube::client::scope;
 use kube::runtime::watcher::{self, Config};
 use kube::{Api, Client};
-use kube::{Resource, api::{ResourceExt, Patch}, runtime::controller::Action};
+use kube::{
+    Resource,
+    api::{Patch, ResourceExt},
+    runtime::controller::Action,
+};
 use serde::Serialize;
-use serde_json::{Value,json};
-use tracing::{info,debug};
+use serde_json::{Value, json};
+use tracing::{debug, info};
 
 use std::sync::Arc;
 
@@ -30,9 +35,9 @@ use super::controller::{
 use super::{BundleResult, ClusterSyncError, ClusterSyncResult};
 
 pub static CONTROLPLANE_READY_CONDITION: &str = "ControlPlaneReady";
-pub static FLEET_WORKSPACE_ANNOTATION: &str = "field.cattle.io/allow-fleetworkspace-creation-for-existing-namespace";
 
 pub struct FleetClusterBundle {
+    namespace: Namespace,
     template_sources: TemplateSources,
     fleet: fleet_cluster::Cluster,
     fleet_group: Option<ClusterGroup>,
@@ -178,17 +183,18 @@ impl FleetBundle for FleetClusterBundle {
         }
 
         // Ensure the fleet workspace annotation is present.
-        let patch = json!({
-                        "metadata": {
-                            "annotations": {
-                                FLEET_WORKSPACE_ANNOTATION: "true"
-                            }
-                        }
-                    });
-        let namespace_name = self.fleet.namespace().unwrap_or_default();
-        let namespaces = Api::<Namespace>::all(ctx.client.clone());
-        namespaces.patch_metadata(&namespace_name,&PatchParams::default(), &Patch::Merge(&patch)).await?;
-        debug!("Added fleet annotation to namespace {}.", namespace_name);
+        patch(
+            ctx.clone(),
+            &mut self.namespace,
+            &PatchParams::apply("namespace-addon-provider-fleet"),
+        )
+        .await
+        .map_err(ClusterSyncError::NamespacePatchError)?;
+
+        debug!(
+            "Added fleet annotation to namespace {}.",
+            self.fleet.get_namespace()
+        );
 
         Ok(Action::await_change())
     }
@@ -214,17 +220,18 @@ impl FleetBundle for FleetClusterBundle {
                 return Ok(Action::await_change());
             }
 
-            Api::<BundleNamespaceMapping>::namespaced(ctx.client.clone(), &ns.unwrap_or_default())
+            BundleNamespaceMapping::get_api(ctx.client.clone(), mapping.get_namespace())
                 .delete(&mapping.name_any(), &DeleteParams::default())
                 .await?;
         }
 
         // List all other clusters in this namespace
-        let namespaces = Api::<Namespace>::all(ctx.client.clone());
-        let namespace_name = self.fleet.namespace().unwrap_or_default();
-        let clusters = Api::<Cluster>::namespaced(ctx.client.clone(), &namespace_name);
-        let other_clusters = clusters
-            .list(&ListParams::default().fields(&format!("metadata.namespace={},metadata.name!={}", namespace_name, self.fleet.name_any())))
+        let other_clusters = Cluster::get_api(ctx.client.clone(), self.fleet.get_namespace())
+            .list(
+                &ListParams::default()
+                    .fields(&format!("metadata.name!={}", self.fleet.name_any()))
+                    .limit(1),
+            )
             .await?;
         // If no other clusters are found in this namespace, remove the fleet workspace annotation.
         if other_clusters.items.is_empty() {
@@ -235,8 +242,17 @@ impl FleetBundle for FleetClusterBundle {
                     }
                 }
             });
-            namespaces.patch_metadata(&namespace_name,&PatchParams::default(), &Patch::Merge(&patch)).await?;
-            debug!("Removed fleet annotation from namespace {}.", namespace_name);
+            Namespace::get_api(ctx.client.clone(), &())
+                .patch_metadata(
+                    self.fleet.get_namespace(),
+                    &PatchParams::default(),
+                    &Patch::Merge(&patch),
+                )
+                .await?;
+            debug!(
+                "Removed fleet annotation from namespace {}.",
+                self.fleet.get_namespace()
+            );
         }
 
         Ok(Action::await_change())
@@ -266,6 +282,7 @@ impl FleetController for Cluster {
             cluster_registration_token: self
                 .to_cluster_registration_token(config.spec.cluster.as_ref()),
             config,
+            namespace: self.to_namespace(),
         }))
     }
 }

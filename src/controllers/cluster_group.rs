@@ -1,9 +1,10 @@
 use crate::api::capi_clusterclass::ClusterClass;
 use crate::api::fleet_clustergroup::ClusterGroup;
+use crate::controllers::controller::GetApi;
 
+use kube::ResourceExt;
 use kube::api::{Patch, PatchParams};
 use kube::runtime::controller::Action;
-use kube::{Api, ResourceExt};
 use serde_json::json;
 
 use std::ops::Deref;
@@ -32,7 +33,6 @@ impl ClusterGroup {
                     .iter()
                     .map(|(k, v)| (k.to_string(), v.to_string())),
             );
-
             patch(
                 ctx.clone(),
                 self,
@@ -43,8 +43,7 @@ impl ClusterGroup {
 
         if self.finalizers().iter().any(|f| f == FLEET_FINALIZER) {
             self.finalizers_mut().retain(|f| f != FLEET_FINALIZER);
-            let api: Api<Self> =
-                Api::namespaced(ctx.client.clone(), &self.namespace().unwrap_or_default());
+            let api = Self::get_api(ctx.client.clone(), self.get_namespace());
             api.patch(
                 &self.name_any(),
                 &PatchParams::default(),
