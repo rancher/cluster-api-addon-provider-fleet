@@ -7,6 +7,7 @@ use fleet_api_rs::{
     },
     fleet_clustergroup::{ClusterGroupSelector, ClusterGroupSpec},
 };
+use k8s_openapi::api::core::v1::Namespace;
 use kube::{
     CustomResource, Resource, ResourceExt as _,
     api::{ObjectMeta, TypeMeta},
@@ -25,6 +26,9 @@ use super::{
 
 #[cfg(feature = "agent-initiated")]
 use super::fleet_cluster_registration_token::ClusterRegistrationToken;
+
+pub static FLEET_WORKSPACE_ANNOTATION: &str =
+    "field.cattle.io/allow-fleetworkspace-creation-for-existing-namespace";
 
 /// `ClusterProxy` defines the desired state of the CAPI Cluster.
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
@@ -202,6 +206,21 @@ impl Cluster {
             ..Default::default()
         }
         .into()
+    }
+
+    pub(crate) fn to_namespace(self: &Cluster) -> Namespace {
+        Namespace {
+            metadata: ObjectMeta {
+                name: self.namespace(),
+                annotations: Some({
+                    let mut map = BTreeMap::new();
+                    map.insert(FLEET_WORKSPACE_ANNOTATION.to_string(), "true".to_string());
+                    map
+                }),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 
     pub(crate) fn cluster_class_namespace(&self) -> Option<&str> {
