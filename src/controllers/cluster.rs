@@ -34,7 +34,7 @@ use super::controller::{
 };
 use super::{BundleResult, ClusterSyncError, ClusterSyncResult};
 
-pub static CONTROLPLANE_READY_CONDITION: &str = "ControlPlaneReady";
+pub static CONTROLPLANE_INITIALIZED_CONDITION: &str = "ControlPlaneInitialized";
 
 pub struct FleetClusterBundle {
     namespace: Namespace,
@@ -293,7 +293,7 @@ impl Cluster {
         let status = self.status.clone()?;
         let cp_ready = status.control_plane_ready.filter(|&ready| ready);
         let ready_condition = status.conditions?.iter().find_map(|c| {
-            (c.type_ == CONTROLPLANE_READY_CONDITION && c.status == "True").then_some(true)
+            (c.type_ == CONTROLPLANE_INITIALIZED_CONDITION && c.status == "True").then_some(true)
         });
 
         ready_condition.or(cp_ready).map(|_| self)
