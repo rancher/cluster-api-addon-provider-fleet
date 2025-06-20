@@ -48,7 +48,14 @@ git push upstream ${RELEASE_TAG}
 This will trigger a [release GitHub action](https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/actions/workflows/release.yaml) that creates a release with `CAAPF` components.
 
 4. Wait for the [update metadata](https://github.com/rancher/cluster-api-addon-provider-fleet/blob/main/.github/workflows/update-metadata.yaml) workflow to pass successfully. 
-This workflow will update the `metadata.yaml` file in the root of the repository preparing it for the next release.
+This workflow will update the `metadata.yaml` file in the root of the repository preparing it for the next release. It will open a [PR](https://github.com/rancher/cluster-api-addon-provider-fleet/pull/309), which needs to be merged before the next minor version release can be cut.
+
+**WARNING: Out of date published metadata.yaml file will cause upstream install via clusterctl to fail**
+
+5. Perform Downstream Build
+
+Perform the downstream build for the release tag using the CAAPF GitHub action. Specific steps and references for this process can be found by asking in the `#team-rancher-highlander` channel.
+
 
 ## Versioning
 
