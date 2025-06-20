@@ -93,7 +93,7 @@ impl Default for Diagnostics {
     fn default() -> Self {
         Self {
             last_event: Utc::now(),
-            reporter: "doc-controller".into(),
+            reporter: "caapf-controller".into(),
         }
     }
 }
