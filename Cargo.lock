@@ -589,9 +589,9 @@ dependencies = [
 
 [[package]]
 name = "cluster-api-rs"
-version = "1.10.2"
+version = "1.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11327f1be00b5c762162893318ae59717210df85b36b6783a790c0f15f1365f1"
+checksum = "3d3a4913f307f5586d7f8a379c9526fb71a8dec9f1de1caa954f477032bf2dcb"
 dependencies = [
  "k8s-openapi",
  "kube",
@@ -871,9 +871,9 @@ dependencies = [
 
 [[package]]
 name = "fleet-api-rs"
-version = "0.12.3"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f16e8ed4417fc9504e0cdf8e4e7f2bd8288515fb5ec34a020bcc88204e2faf06"
+checksum = "aca8391fba643fab1deb1c0b166069913627f386faced93630726512228ffe49"
 dependencies = [
  "k8s-openapi",
  "kube",
