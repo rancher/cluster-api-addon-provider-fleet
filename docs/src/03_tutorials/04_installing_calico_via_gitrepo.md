@@ -66,7 +66,7 @@ gitrepo.fleet.cattle.io/calico created
 # After some time
 > kubectl get gitrepo
 NAME     REPO                                                                     COMMIT                                     BUNDLEDEPLOYMENTS-READY   STATUS
-calico   https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet.git   62b4fe6944687e02afb331b9e1839e33c539f0c7   1/1
+calico   https://github.com/rancher/cluster-api-addon-provider-fleet.git   62b4fe6944687e02afb331b9e1839e33c539f0c7   1/1
 ```
 
 Now our cluster have `calico` installed, and all nodes are marked as `Ready`:

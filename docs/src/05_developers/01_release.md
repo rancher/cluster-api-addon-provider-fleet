@@ -9,7 +9,7 @@
 1. Clone the repository locally:
 
 ```bash
-git clone git@github.com:rancher-sandbox/cluster-api-addon-provider-fleet.git
+git clone git@github.com:rancher/cluster-api-addon-provider-fleet.git
 ```
 
 2. Depending on whether you are cutting a minor/major or patch release, the process varies.
@@ -19,7 +19,7 @@ git clone git@github.com:rancher-sandbox/cluster-api-addon-provider-fleet.git
         Create a new release branch (i.e release-X) and push it to the upstream repository.
 
         ```bash
-            # Note: `upstream` must be the remote pointing to `github.com/rancher-sandbox/cluster-api-addon-provider-fleet`.
+            # Note: `upstream` must be the remote pointing to `github.com/rancher/cluster-api-addon-provider-fleet`.
             git checkout -b release-0.4
             git push -u upstream release-0.4
             # Export the tag of the minor/major release to be cut, e.g.:
@@ -30,7 +30,7 @@ git clone git@github.com:rancher-sandbox/cluster-api-addon-provider-fleet.git
         Use existing release branch.
 
         ```bash
-            # Note: `upstream` must be the remote pointing to `github.com/rancher-sandbox/cluster-api-addon-provider-fleet`
+            # Note: `upstream` must be the remote pointing to `github.com/rancher/cluster-api-addon-provider-fleet`
             git checkout upstream/release-0.4
             # Export the tag of the patch release to be cut, e.g.:
             export RELEASE_TAG=v0.4.1
@@ -45,7 +45,7 @@ git tag -s -a ${RELEASE_TAG} -m ${RELEASE_TAG}
 git push upstream ${RELEASE_TAG}
 ```
 
-This will trigger a [release GitHub action](https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/actions/workflows/release.yaml) that creates a release with `CAAPF` components.
+This will trigger a [release GitHub action](https://github.com/rancher/cluster-api-addon-provider-fleet/actions/workflows/release.yaml) that creates a release with `CAAPF` components.
 
 4. Wait for the [update metadata](https://github.com/rancher/cluster-api-addon-provider-fleet/blob/main/.github/workflows/update-metadata.yaml) workflow to pass successfully. 
 This workflow will update the `metadata.yaml` file in the root of the repository preparing it for the next release. It will open a [PR](https://github.com/rancher/cluster-api-addon-provider-fleet/pull/309), which needs to be merged before the next minor version release can be cut.
