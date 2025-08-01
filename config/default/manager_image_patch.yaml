@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       containers:
-      - image: ghcr.io/rancher-sandbox/cluster-api-addon-provider-fleet:dev
+      - image: ghcr.io/rancher/cluster-api-addon-provider-fleet:dev
         name: manager
-      - image: ghcr.io/rancher-sandbox/cluster-api-addon-provider-fleet:dev
+      - image: ghcr.io/rancher/cluster-api-addon-provider-fleet:dev
         name: helm-manager

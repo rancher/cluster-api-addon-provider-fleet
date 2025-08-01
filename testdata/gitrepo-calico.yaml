@@ -6,7 +6,7 @@ spec:
   branch: main
   paths:
   - /fleet/applications/calico
-  repo: https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet.git
+  repo: https://github.com/rancher/cluster-api-addon-provider-fleet.git
   targets:
   - clusterSelector:
       matchLabels:

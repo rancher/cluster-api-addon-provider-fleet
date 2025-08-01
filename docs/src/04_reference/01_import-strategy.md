@@ -11,7 +11,7 @@ CAAPF follows a simple import strategy for CAPI clusters:
 
 **By default, `CAAPF` imports all `CAPI` clusters under Fleet management. See the [configuration](03_fleet-addon-config.md#applyclassgroup) section for details.**
 
-![CAAPF-import-groups excalidraw dark](https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/assets/32226600/0e0bf58d-7030-491e-976e-8363023f0c88)
+![CAAPF-import-groups excalidraw dark](https://github.com/rancher/cluster-api-addon-provider-fleet/assets/32226600/0e0bf58d-7030-491e-976e-8363023f0c88)
 
 ## Label Synchronization
 

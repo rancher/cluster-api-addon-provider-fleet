@@ -33,5 +33,5 @@ just start-dev
 This command will create a kind cluster and manage the installation of the fleet provider and all dependencies.
 4. Once the installation is complete, you can inspect the current state of your development cluster.
 
-[CAAPF]: https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/
-[justfile]: https://github.com/rancher-sandbox/cluster-api-addon-provider-fleet/blob/main/justfile
+[CAAPF]: https://github.com/rancher/cluster-api-addon-provider-fleet/
+[justfile]: https://github.com/rancher/cluster-api-addon-provider-fleet/blob/main/justfile
