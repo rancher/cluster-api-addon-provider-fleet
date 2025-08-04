@@ -32,7 +32,7 @@ telemetry = []
 rand = { version = "0.9", features = ["small_rng"] }
 actix-web = "4.11.0"
 futures = "0.3.28"
-tokio = { version = "1.46.1", features = ["macros", "rt-multi-thread", "process"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "process"] }
 k8s-openapi = { version = "0.25", features = ["latest", "schemars"] }
 kube = { version = "1.1.0", features = [
     "runtime",
