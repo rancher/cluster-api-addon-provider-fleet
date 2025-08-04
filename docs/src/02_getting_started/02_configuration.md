@@ -5,7 +5,7 @@
 By default `CAAPF` expects your cluster to have `Fleet` helm chart pre-installed and configured, but it can manage `Fleet` installation via `FleetAddonConfig` resource, named `fleet-addon-config`. To install `Fleet` helm chart with latest stable `Fleet` version:
 
 ```yaml
-apiversion: addons.cluster.x-k8s.io/v1alpha1
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
 kind: FleetAddonConfig
 metadata:
   name: fleet-addon-config
@@ -20,7 +20,7 @@ spec:
 Alternatively, a specific version can be provided in the `spec.install.version`:
 
 ```yaml
-apiversion: addons.cluster.x-k8s.io/v1alpha1
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
 kind: FleetAddonConfig
 metadata:
   name: fleet-addon-config

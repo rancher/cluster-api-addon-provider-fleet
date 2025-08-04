@@ -32,7 +32,7 @@ helm install --create-namespace --version v0.12.0 -n cattle-fleet-system --set a
 ```
 4. Install CAPI with the required experimental features enabled and initialized the Docker provider for testing.
 ```
-EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init -i docker -a rancher-fleet
+EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init -i docker --addon rancher-fleet
 ```
 
 Wait for all pods to become ready and your cluster should be ready to use CAAPF!
