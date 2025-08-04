@@ -21,5 +21,5 @@ spec:
       matchLabels:
         import: ""
   install:
-    followLatest: true # We will install alpha for helmapp support
+    followLatest: true # We will install alpha for helmop support
 

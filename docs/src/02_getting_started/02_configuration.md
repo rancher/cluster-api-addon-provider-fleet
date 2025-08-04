@@ -85,7 +85,7 @@ spec:
 
 Fleet includes experimental features that can be enabled or disabled using feature gates in the `FleetAddonConfig` resource. These flags are configured under .spec.config.featureGates.
 
-To enable experimental features such as OCI storage support and `HelmApp` support, update the FleetAddonConfig as follows:
+To enable experimental features such as OCI storage support and `HelmOp` support, update the FleetAddonConfig as follows:
 
 ```yaml
 apiVersion: addons.cluster.x-k8s.io/v1alpha1
