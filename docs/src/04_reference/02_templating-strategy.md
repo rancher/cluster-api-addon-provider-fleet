@@ -14,6 +14,6 @@ The **Addon Provider Fleet** ensures that the state of a CAPI cluster and resour
 - Maintain a consistent application state across different clusters.
 - Use the same template for multiple matching clusters to simplify deployment and management.
 
-## Example - templating withing HelmApp
+## Example - templating withing HelmOp
 
 -> [Installing Calico](../03_tutorials/03_installing_calico.md#deploying-calico-cni)

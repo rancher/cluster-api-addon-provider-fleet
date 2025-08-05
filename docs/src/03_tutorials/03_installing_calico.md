@@ -1,18 +1,18 @@
-# Installing Calico CNI using HelmApp
+# Installing Calico CNI using HelmOp
 
 <div class="warning">
 
 Note: For this setup to work, you need to install Fleet and Fleet CRDs charts via
 `FleetAddonConfig` resource. Both need to have version >= v0.12.0,
-which provides support for `HelmApp` resource.
+which provides support for `HelmOp` resource.
 
 </div>
 
-In this tutorial we will deploy `Calico` CNI using `HelmApp` resource and `Fleet` cluster substitution mechanism.
+In this tutorial we will deploy `Calico` CNI using `HelmOp` resource and `Fleet` cluster substitution mechanism.
 
 ## Deploying Calico CNI
 
-Here's an example of how a `HelmApp` resource can be used in combination with templateValues to deploy application consistently on any matching cluster.
+Here's an example of how a `HelmOp` resource can be used in combination with templateValues to deploy application consistently on any matching cluster.
 
 In this scenario we are matching cluster directly by name, using `clusterName` reference, but a `clusterGroup` or a label based selection can be used instead or together with `clusterName`:
 ```yaml
@@ -20,13 +20,13 @@ In this scenario we are matching cluster directly by name, using `clusterName` r
   - clusterName: docker-demo
 ```
 
-We are deploying `HelmApp` resource in the `default` namespace. The namespace should be the same for the CAPI Cluster for fleet to locate it.
+We are deploying `HelmOp` resource in the `default` namespace. The namespace should be the same for the CAPI Cluster for fleet to locate it.
 
 ```yaml
 {{#include ../../../testdata/helm.yaml}}
 ```
 
-`HelmApp` supports fleet [templating][] options, otherwise available exclusively to the `fleet.yaml` configuration, stored in the [git repository contents][], and applied via the `GitRepo` resource.
+`HelmOp` supports fleet [templating][] options, otherwise available exclusively to the `fleet.yaml` configuration, stored in the [git repository contents][], and applied via the `GitRepo` resource.
 
 [templating]: https://fleet.rancher.io/ref-fleet-yaml#templating
 [git repository contents]: https://fleet.rancher.io/gitrepo-content
@@ -37,12 +37,12 @@ After appying the resource we will observe the app rollout:
 
 ```bash
 > kubectl apply -f testdata/helm.yaml
-helmapp.fleet.cattle.io/calico created
-> kubectl get helmapp
+helmop.fleet.cattle.io/calico created
+> kubectl get helmop
 NAME     REPO                                   CHART             VERSION   BUNDLEDEPLOYMENTS-READY   STATUS
 calico   https://docs.tigera.io/calico/charts   tigera-operator   v3.29.2   0/1                       NotReady(1) [Bundle calico]; apiserver.operator.tigera.io default [progressing]
 # After some time
-> kubectl get helmapp
+> kubectl get helmop
 NAME     REPO                                   CHART             VERSION   BUNDLEDEPLOYMENTS-READY   STATUS
 calico   https://docs.tigera.io/calico/charts   tigera-operator   v3.29.2   1/1
 > kubectl get pods -n calico-system --context capi-quickstart

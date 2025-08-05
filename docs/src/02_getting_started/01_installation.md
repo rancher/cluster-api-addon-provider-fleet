@@ -23,5 +23,5 @@ helm repo add capi-operator https://kubernetes-sigs.github.io/cluster-api-operat
 helm repo update
 helm upgrade --install capi-operator capi-operator/cluster-api-operator \
     --create-namespace -n capi-operator-system \
-    --set infrastructure=docker --set addon=rancher-fleet
+    --set infrastructure.docker.enabled=true --set addon.rancher-fleet.enabled=true
 ```

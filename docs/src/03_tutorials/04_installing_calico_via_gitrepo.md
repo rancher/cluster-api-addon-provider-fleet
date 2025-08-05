@@ -47,7 +47,7 @@ We will first review the content of our `fleet.yaml` file:
 {{#include ../../../fleet/applications/calico/fleet.yaml}}
 ```
 
-In this scenario we are using `helm` definition which is consistent with the `HelmApp` spec from the [previous][] guide, and defines same templating rules.
+In this scenario we are using `helm` definition which is consistent with the `HelmOp` spec from the [previous][] guide, and defines same templating rules.
 
 We also need to [resolve conflicts][], which happen due to in-place modification of some resources by the `calico` controllers. For that, the `diff` section is used, where we remove blocking fields from comparison.
 

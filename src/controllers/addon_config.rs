@@ -593,7 +593,7 @@ mod tests {
         use crate::controllers::addon_config::FleetConfigData;
         let data = r#"{
             "systemDefaultRegistry": "",
-            "agentImage": "rancher/fleet-agent:v0.9.4",
+            "agentImage": "rancher/fleet-agent:v0.12.5",
             "agentImagePullPolicy": "IfNotPresent",
             "apiServerURL": "https://192.168.1.123:43473",
             "apiServerCA": "test",

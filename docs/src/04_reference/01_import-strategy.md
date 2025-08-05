@@ -5,7 +5,7 @@ CAAPF follows a simple import strategy for CAPI clusters:
 1. Each CAPI cluster has a corresponding Fleet `Cluster` object.
 2. Each CAPI Cluster Class has a corresponding Fleet `ClusterGroup` object.
 3. When a CAPI `Cluster` references a `ClusterClass` in a different namespace, a `ClusterGroup` is created in the `Cluster` namespace. This `ClusterGroup` targets all clusters in this namespace that reference the same `ClusterClass`. See the [configuration](03_fleet-addon-config#applyclassgroup) section for details.
-4. If at least one CAPI `Cluster` references a `ClusterClass` in a different namespace, a [`BundleNamespaceMapping`][mapping] is created in the `ClusterClass` namespace. This allows Fleet `Cluster` resources to use application sources such as `Bundles`, `HelmApps`, or `GitRepos` from the `ClusterClass` namespace as if they were deployed in the `Cluster` namespace. See the [configuration](#cluster-clustergroupbundlenamespacemapping-configuration) section for details.
+4. If at least one CAPI `Cluster` references a `ClusterClass` in a different namespace, a [`BundleNamespaceMapping`][mapping] is created in the `ClusterClass` namespace. This allows Fleet `Cluster` resources to use application sources such as `Bundles`, `HelmOps`, or `GitRepos` from the `ClusterClass` namespace as if they were deployed in the `Cluster` namespace. See the [configuration](#cluster-clustergroupbundlenamespacemapping-configuration) section for details.
 
 [mapping]: https://fleet.rancher.io/namespaces#cross-namespace-deployments
 
