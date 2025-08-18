@@ -54,7 +54,7 @@ tracing-opentelemetry = "0.30.0"
 opentelemetry = { version = "0.29.1" }
 opentelemetry-otlp = { version = "0.29.0", features = ["grpc-tonic", "logs"]}
 opentelemetry_sdk = { version = "0.29.0" }
-thiserror = "2.0.11"
+thiserror = "2.0.15"
 anyhow = "1.0.98"
 base64 = "0.22.1"
 clap = { version = "4.5.41", features = ["derive"] }
