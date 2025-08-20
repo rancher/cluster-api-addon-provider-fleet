@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - kube_version: "1.30.4"
+          - kube_version: "1.31.4"
             display_name: "stable"
           - kube_version: "1.32.0"
             display_name: "latest"
@@ -64,7 +64,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - kube_version: "1.30.4"
+          - kube_version: "1.31.4"
             display_name: "stable"
           - kube_version: "1.32.0"
             display_name: "latest"
@@ -97,7 +97,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - kube_version: "1.30.4"
+          - kube_version: "1.31.4"
             display_name: "stable"
           - kube_version: "1.32.0"
             display_name: "latest"

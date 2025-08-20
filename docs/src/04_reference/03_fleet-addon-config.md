@@ -211,7 +211,7 @@ It is a required field and provides a config for fleet addon functionality.
         -   `clusterclass-name.fleet.addons.cluster.x-k8s.io: <class-name>`
         -   `clusterclass-namespace.fleet.addons.cluster.x-k8s.io: <class-ns>`
 
-        Additionally, this configuration enables the creation of a `BundleNamespaceMapping`. This mapping selects all available bundles and establishes a link between the namespace of the `Cluster` and the namespace of the referenced `ClusterClass`. This allows the Fleet `Cluster` to be evaluated as a target for application sources such as `Bundles`, `HelmApps`, or `GitRepos` from the **`ClusterClass`** namespace.
+        Additionally, this configuration enables the creation of a `BundleNamespaceMapping`. This mapping selects all available bundles and establishes a link between the namespace of the `Cluster` and the namespace of the referenced `ClusterClass`. This allows the Fleet `Cluster` to be evaluated as a target for application sources such as `Bundles`, `HelmOps`, or `GitRepos` from the **`ClusterClass`** namespace.
 
         When all CAPI `Cluster` resources referencing the same `ClusterClass` are removed, both the `ClusterGroup` and `BundleNamespaceMapping` are cleaned up.
 

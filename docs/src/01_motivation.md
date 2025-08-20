@@ -8,7 +8,7 @@ One of the projects involved in deploying `Helm` charts on CAPI-provisioned clus
 
 [CAAPH]: https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm
 
-Fleet also supports deploying Helm charts via the (experimental) `HelmApp` resource, which offers similar capabilities to `HelmChartProxy`. However, Fleet primarily focuses on providing `GitOps` capabilities for managing `CAPI` clusters and application states within these clusters.
+Fleet also supports deploying Helm charts via the (experimental) `HelmOp` resource, which offers similar capabilities to `HelmChartProxy`. However, Fleet primarily focuses on providing `GitOps` capabilities for managing `CAPI` clusters and application states within these clusters.
 
 Out of the box, `Fleet` allows users to deploy and maintain the state of arbitrary templates on child clusters using the `Fleet` [`Bundle`][] resource. This approach addresses the need for alternatives to [`ClusterResourceSet`][] while offering full application lifecycle management.
 
