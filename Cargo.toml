@@ -57,7 +57,7 @@ opentelemetry_sdk = { version = "0.29.0" }
 thiserror = "2.0.11"
 anyhow = "1.0.98"
 base64 = "0.22.1"
-clap = { version = "4.5.41", features = ["derive"] }
+clap = { version = "4.5.48", features = ["derive"] }
 cluster-api-rs = "1.10.3"
 fleet-api-rs = "0.12.4"
 async-broadcast = "0.7.2"
