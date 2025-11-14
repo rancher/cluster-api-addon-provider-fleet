@@ -220,9 +220,11 @@ impl FleetBundle for FleetClusterBundle {
                 return Ok(Action::await_change());
             }
 
-            BundleNamespaceMapping::get_api(ctx.client.clone(), mapping.get_namespace())
-                .delete(&mapping.name_any(), &DeleteParams::default())
-                .await?;
+            let bundle_namespace_mapping = BundleNamespaceMapping::get_api(ctx.client.clone(), mapping.get_namespace());
+
+            if bundle_namespace_mapping.get_opt(&mapping.name_any()).await?.is_some() {
+                bundle_namespace_mapping.delete(&mapping.name_any(), &DeleteParams::default()).await?;
+            }
         }
 
         // List all other clusters in this namespace
