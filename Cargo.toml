@@ -50,10 +50,10 @@ prometheus = "0.14.0"
 chrono = { version = "0.4.41", features = ["serde"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.20", features = ["json", "env-filter"] }
-tracing-opentelemetry = "0.30.0"
-opentelemetry = { version = "0.29.1" }
-opentelemetry-otlp = { version = "0.29.0", features = ["grpc-tonic", "logs"]}
-opentelemetry_sdk = { version = "0.29.0" }
+tracing-opentelemetry = "0.32.0"
+opentelemetry = { version = "0.31.0" }
+opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic", "logs"]}
+opentelemetry_sdk = { version = "0.31.0" }
 thiserror = "2.0.17"
 anyhow = "1.0.100"
 base64 = "0.22.1"
