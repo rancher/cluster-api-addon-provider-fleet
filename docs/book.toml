@@ -1,6 +1,5 @@
 [book]
 language = "en"
-multilingual = false
 src = "src"
 title = "Cluster API Addon Provider Fleet"
 description = "Addon for native Fleet GitOps integration with CAPI"

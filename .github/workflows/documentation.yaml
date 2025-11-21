@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install mdBook
-      run: cargo install mdbook mdbook-fs-summary mdbook-toc
+      run: cargo install mdbook@0.4.52 mdbook-fs-summary@0.2.1 mdbook-toc@0.14.2
 
     - name: Build mdbook
       run: |
