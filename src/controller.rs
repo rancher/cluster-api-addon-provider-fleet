@@ -336,7 +336,7 @@ pub async fn run_cluster_controller(state: State) {
                 .into_iter()
                 .filter_map(move |c: Arc<Cluster>| {
                     let in_namespace =
-                        c.spec.proxy.topology.as_ref()?.class_namespace == mapping.namespace();
+                        c.spec.proxy.topology.as_ref()?.class_ref.namespace == mapping.namespace();
                     in_namespace.then_some(ObjectRef::from_obj(&*c))
                 })
         })

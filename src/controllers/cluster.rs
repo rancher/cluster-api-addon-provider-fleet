@@ -11,6 +11,7 @@ use crate::controllers::addon_config::to_dynamic_event;
 use crate::controllers::controller::GetApi;
 use futures::StreamExt as _;
 use k8s_openapi::api::core::v1::Namespace;
+use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
 use kube::api::{
     ApiResource, DeleteParams, DynamicObject, GroupVersionKind, ListParams, PatchParams,
 };
@@ -21,7 +22,7 @@ use kube::{Api, Client};
 use kube::{
     Resource,
     api::{Patch, ResourceExt},
-    runtime::controller::Action,
+    runtime::controller::Action
 };
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -68,24 +69,37 @@ impl TemplateSources {
         // We need to remove all dynamic or unnessesary values from these resources
         let mut cluster = self.0.clone();
 
+        debug!("Mapping template values for Cluster: {}", cluster.metadata.name.clone()?);
+
         cluster.status = None;
         cluster.meta_mut().managed_fields = None;
         cluster.meta_mut().resource_version = None;
 
+        // Get the ControlPlaneReference
         let reference = self.0.spec.proxy.control_plane_ref.as_ref()?;
-        let api_version = reference.api_version.as_ref()?;
-        let (group, version) = api_version.split_once('/').unwrap_or(("", api_version));
+        
+        // Get the API version from CRD.
+        // Note: This assumes the storage version is the right one. 
+        let crd_name = format!("{}.{}", to_plural(&reference.kind).to_lowercase(), reference.api_group);
+        let crds: Api<CustomResourceDefinition> = Api::all(client.clone());
+        let crd: CustomResourceDefinition = crds.get(&crd_name).await.ok()?; 
+        let api_version = crd.spec.versions.iter().find(|&version| version.storage)?;
+
+        debug!("Fetching ControlPlane resource: {} - {}/{}", reference.kind, &reference.api_group, &api_version.name);
+
         let resource = ApiResource::from_gvk(&GroupVersionKind::gvk(
-            group,
-            version,
-            reference.kind.as_ref()?,
+            &reference.api_group,
+            &api_version.name,
+            &reference.kind,
         ));
         let api = Api::<DynamicObject>::namespaced_with(
             client.clone(),
-            reference.namespace.as_ref()?,
+            cluster.get_namespace(),
             &resource,
         );
-        let mut control_plane = api.get(reference.name.as_ref()?).await.ok()?;
+        let mut control_plane = api.get(&reference.name).await.ok()?;
+
+        debug!("Found {} object: {}", &control_plane.types.clone()?.kind, &control_plane.metadata.name.clone()?);
 
         if let Some(data_object) = control_plane.data.as_object_mut() {
             data_object.remove("status");
@@ -93,20 +107,31 @@ impl TemplateSources {
         control_plane.meta_mut().managed_fields = None;
         control_plane.meta_mut().resource_version = None;
 
+        // Get the InfraReference
         let infra_reference = self.0.spec.proxy.infrastructure_ref.as_ref()?;
-        let api_version = infra_reference.api_version.as_ref()?;
-        let (group, version) = api_version.split_once('/').unwrap_or(("", api_version));
+
+        // Get the API version from CRD.
+        // Note: This assumes the storage version is the right one. 
+        let crd_name = format!("{}.{}", to_plural(&infra_reference.kind).to_lowercase(), infra_reference.api_group);
+        let crds: Api<CustomResourceDefinition> = Api::all(client.clone());
+        let crd: CustomResourceDefinition = crds.get(&crd_name).await.ok()?; 
+        let api_version = crd.spec.versions.iter().find(|&version| version.storage)?;
+
+        debug!("Fetching InfrastructureCluster resource: {} - {}/{}", &infra_reference.kind, &infra_reference.api_group, &api_version.name);
+
         let resource = ApiResource::from_gvk(&GroupVersionKind::gvk(
-            group,
-            version,
-            infra_reference.kind.as_ref()?,
+            &infra_reference.api_group,
+            &api_version.name,
+            &infra_reference.kind,
         ));
         let api = Api::<DynamicObject>::namespaced_with(
             client.clone(),
-            infra_reference.namespace.as_ref()?,
+            cluster.get_namespace(),
             &resource,
         );
-        let mut infrastructure_cluster = api.get(infra_reference.name.as_ref()?).await.ok()?;
+        let mut infrastructure_cluster = api.get(&infra_reference.name).await.ok()?;
+
+        debug!("Found {} object: {}", &infrastructure_cluster.types.clone()?.kind, &infrastructure_cluster.metadata.name.clone()?);
 
         if let Some(data_object) = infrastructure_cluster.data.as_object_mut() {
             data_object.remove("status");
@@ -211,7 +236,7 @@ impl FleetBundle for FleetClusterBundle {
                 .await?;
 
             let referencing_cluster = other_clusters.iter().find(|c| {
-                c.cluster_class_namespace() == ns.as_deref()
+                c.cluster_class_namespace() == ns
                     && c.name_any() != self.fleet.name_any()
                     && c.metadata.deletion_timestamp.is_none()
             });
@@ -271,7 +296,8 @@ impl FleetController for Cluster {
             return Ok(None);
         }
 
-        if self.cluster_ready().is_none() {
+        if self.cluster_ready().is_none_or(|initialized| !initialized){
+            debug!("ControlPlane not yet initialized. Nothing to do.");
             return Ok(None);
         }
 
@@ -291,14 +317,13 @@ impl FleetController for Cluster {
 
 impl Cluster {
     #[must_use]
-    pub fn cluster_ready(&self) -> Option<&Self> {
+    pub fn cluster_ready(&self) -> Option<bool> {
         let status = self.status.clone()?;
-        let cp_ready = status.control_plane_ready.filter(|&ready| ready);
-        let ready_condition = status.conditions?.iter().find_map(|c| {
-            (c.type_ == CONTROLPLANE_INITIALIZED_CONDITION && c.status == "True").then_some(true)
-        });
 
-        ready_condition.or(cp_ready).map(|_| self)
+        match status.initialization {
+            Some(initialization) => initialization.control_plane_initialized,
+            None => None
+        }
     }
 
     /// Adds a dynamic watcher for a specific namespace.
@@ -338,4 +363,34 @@ impl Cluster {
 
         Ok(Action::await_change())
     }
+}
+
+// Simple pluralizer.
+// Duplicating the code from kube (without special casing) because it's simple enough.
+// See: https://github.com/kube-rs/kube/blob/2.0.1/kube-derive/src/custom_resource.rs#L856
+fn to_plural(word: &str) -> String {
+    // Words ending in s, x, z, ch, sh will be pluralized with -es (eg. foxes).
+    if word.ends_with('s')
+        || word.ends_with('x')
+        || word.ends_with('z')
+        || word.ends_with("ch")
+        || word.ends_with("sh")
+    {
+        return format!("{word}es");
+    }
+
+    // Words ending in y that are preceded by a consonant will be pluralized by
+    // replacing y with -ies (eg. puppies).
+    if word.ends_with('y')
+        && let Some(c) = word.chars().nth(word.len() - 2)
+        && !matches!(c, 'a' | 'e' | 'i' | 'o' | 'u')
+    {
+        // Remove 'y' and add `ies`
+        let mut chars = word.chars();
+        chars.next_back();
+        return format!("{}ies", chars.as_str());
+    }
+
+    // All other words will have "s" added to the end (eg. days).
+    format!("{word}s")
 }

@@ -16,7 +16,7 @@ use self::prelude::*;
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(
     group = "cluster.x-k8s.io",
-    version = "v1beta1",
+    version = "v1beta2",
     kind = "ClusterClass",
     plural = "clusterclasses"
 )]

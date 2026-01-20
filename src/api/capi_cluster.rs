@@ -34,7 +34,7 @@ pub static FLEET_WORKSPACE_ANNOTATION: &str =
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(
     group = "cluster.x-k8s.io",
-    version = "v1beta1",
+    version = "v1beta2",
     kind = "Cluster",
     plural = "clusters"
 )]
@@ -100,7 +100,7 @@ impl Cluster {
         let config = config.unwrap_or(&empty);
         let class = self.cluster_class_name();
         let ns = self.namespace().unwrap_or_default();
-        let class_namespace = self.cluster_class_namespace().unwrap_or(&ns);
+        let class_namespace = self.cluster_class_namespace().unwrap_or(ns);
         let annotations = self.annotations().clone();
         let labels = {
             let mut labels = self.labels().clone();
@@ -166,7 +166,7 @@ impl Cluster {
         config?.apply_class_group().then_some(true)?;
 
         let topology = self.spec.proxy.topology.as_ref()?;
-        let class_namespace = topology.class_namespace.clone()?;
+        let class_namespace = topology.class_ref.namespace.clone()?;
 
         let match_labels = {
             let mut labels = BTreeMap::default();
@@ -223,16 +223,17 @@ impl Cluster {
         }
     }
 
-    pub(crate) fn cluster_class_namespace(&self) -> Option<&str> {
+    pub(crate) fn cluster_class_namespace(&self) -> Option<String> {
         self.spec
             .proxy
             .topology
             .as_ref()?
-            .class_namespace
-            .as_deref()
+            .class_ref
+            .namespace.clone()
     }
 
-    pub(crate) fn cluster_class_name(&self) -> Option<&str> {
-        Some(&self.spec.proxy.topology.as_ref()?.class)
+    pub(crate) fn cluster_class_name(&self) -> Option<String> {
+        let topology = self.spec.proxy.topology.as_ref()?;
+        Some(topology.class_ref.name.clone())
     }
 }

@@ -1,15 +1,18 @@
 NAME := "cluster-api-addon-provider-fleet"
-KUBE_VERSION := env_var_or_default('KUBE_VERSION', '1.32.0')
+KUBE_VERSION := env_var_or_default('KUBE_VERSION', '1.34.0')
 ORG := "ghcr.io/rancher"
 TAG := "dev"
 HOME_DIR := env_var('HOME')
-YQ_VERSION := "v4.43.1"
-CLUSTERCTL_VERSION := "v1.10.2"
+YQ_VERSION := "v4.50.1"
+CLUSTERCTL_VERSION := "v1.11.4"
 OUT_DIR := "_out"
-KUSTOMIZE_VERSION := "v5.4.1"
+KUSTOMIZE_VERSION := "v5.8.0"
 ARCH := if arch() == "aarch64" { "arm64"} else { "amd64" }
 DIST := os()
 REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
+
+# Test providers
+CLUSTER_API_VERSION := "v1.11.4"
 
 export PATH := "_out:_out/bin:" + env_var('PATH')
 
@@ -27,6 +30,19 @@ _generate-kopium-url kpath="" source="" dest="" yqexp="." condition="":
 
 generate-addon-crds features="":
     cargo run --features={{features}} --bin crdgen > config/crds/fleet-addon-config.yaml
+    
+    # The following is a manual patch to fix an incorrect CRD generation for nullable enums.
+    # The issue has been fixed in kube-rs, but not yet released.
+    # See: https://github.com/kube-rs/kube/pull/1853 
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.nullable=true' config/crds/fleet-addon-config.yaml
+    yq -i 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.anyOf)' config/crds/fleet-addon-config.yaml
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.oneOf[0].required=["inferLocal"]' config/crds/fleet-addon-config.yaml
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.oneOf[1].required=["custom"]' config/crds/fleet-addon-config.yaml
+
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.nullable=true' config/crds/fleet-addon-config.yaml
+    yq -i 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.anyOf)' config/crds/fleet-addon-config.yaml
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.oneOf[0].required=["followLatest"]' config/crds/fleet-addon-config.yaml
+    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.oneOf[1].required=["version"]' config/crds/fleet-addon-config.yaml
 
 # run with opentelemetry
 run-telemetry:
@@ -150,7 +166,7 @@ install-fleet: _create-out-dir
 
 # Install cluster api and any providers
 install-capi: _download-clusterctl
-    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init -i docker -b rke2 -c rke2 -b kubeadm -c kubeadm
+    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init --core cluster-api:{{CLUSTER_API_VERSION}} -i docker:{{CLUSTER_API_VERSION}} -b rke2 -c rke2 -b kubeadm:{{CLUSTER_API_VERSION}} -c kubeadm:{{CLUSTER_API_VERSION}}
 
 # Deploy will deploy the operator
 deploy features="": _download-kustomize
@@ -171,6 +187,7 @@ release-manifests: _create-out-dir _download-kustomize
 test-import: start-dev deploy deploy-child-cluster deploy-kindnet deploy-app && collect-test-import
     kubectl wait pods --for=condition=Ready --timeout=150s --all --all-namespaces
     kubectl wait cluster --timeout=500s --for=condition=ControlPlaneInitialized=true docker-demo
+    kubectl wait --timeout=500s --for=create clusters.fleet.cattle.io docker-demo
     kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true docker-demo
     kubectl wait ns default --timeout=500s --for=jsonpath='{.metadata.annotations.field\.cattle\.io\/allow-fleetworkspace-creation-for-existing-namespace}=true'
 
@@ -178,6 +195,7 @@ test-import: start-dev deploy deploy-child-cluster deploy-kindnet deploy-app && 
 test-import-rke2: start-dev deploy deploy-child-rke2-cluster deploy-calico-gitrepo deploy-app
     kubectl wait pods --for=condition=Ready --timeout=150s --all --all-namespaces
     kubectl wait cluster --timeout=500s --for=condition=ControlPlaneInitialized=true docker-demo
+    kubectl wait --timeout=500s --for=create clusters.fleet.cattle.io docker-demo
     kubectl wait clusters.fleet.cattle.io --timeout=500s --for=condition=Ready=true docker-demo
 
 collect-test-import:

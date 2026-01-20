@@ -1,4 +1,4 @@
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: DockerCluster
 metadata:
   name: docker-demo
@@ -7,7 +7,7 @@ spec:
     customHAProxyConfigTemplateRef:
       name: docker-demo-lb-config
 ---
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
   name: docker-demo
@@ -24,22 +24,22 @@ spec:
       - 10.10.0.0/16
     serviceDomain: cluster.local
   controlPlaneRef:
-    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    apiGroup: controlplane.cluster.x-k8s.io
     kind: RKE2ControlPlane
     name: docker-demo-control-plane
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    apiGroup: infrastructure.cluster.x-k8s.io
     kind: DockerCluster
     name: docker-demo
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: DockerMachineTemplate
 metadata:
   name:  docker-demo-control-plane
 spec:
   template:
     spec:
-      customImage: kindest/node:v1.31.0
+      customImage: kindest/node:v1.34.0
       bootstrapTimeout: 15m
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
@@ -48,7 +48,7 @@ metadata:
   name: docker-demo-control-plane
 spec:
   replicas: 1
-  version: v1.31.0+rke2r1
+  version: v1.34.0+rke2r1
   rolloutStrategy:
     rollingUpdate:
       maxSurge: 1
@@ -66,24 +66,24 @@ spec:
       - cloudController
   machineTemplate:
     infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
       kind: DockerMachineTemplate
       name:  docker-demo-control-plane
     nodeDrainTimeout: 30s
   infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
     kind: DockerMachineTemplate
     name:  docker-demo-control-plane
   nodeDrainTimeout: 30s
 ---
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: DockerMachineTemplate
 metadata:
   name: docker-demo-md-0
 spec:
   template:
     spec:
-      customImage: kindest/node:v1.31.0
+      customImage: kindest/node:v1.34.0
       bootstrapTimeout: 15m
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
@@ -92,7 +92,7 @@ metadata:
   name: docker-demo-md-0
 spec: {}
 ---
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: MachineDeployment
 metadata:
   name: docker-demo-md-0
@@ -104,15 +104,15 @@ spec:
       cluster.x-k8s.io/cluster-name: docker-demo
   template:
     spec:
-      version: v1.31.0+rke2r1
+      version: v1.34.0+rke2r1
       clusterName: docker-demo
       bootstrap:
         configRef:
-          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          apiGroup: bootstrap.cluster.x-k8s.io
           kind: RKE2ConfigTemplate
           name: docker-demo-md-0
       infrastructureRef:
-        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        apiGroup: infrastructure.cluster.x-k8s.io
         kind: DockerMachineTemplate
         name: docker-demo-md-0
 ---
