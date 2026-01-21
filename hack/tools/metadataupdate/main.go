@@ -25,7 +25,7 @@ type ReleaseSeries struct {
 }
 
 func main() {
-	contractFlag := flag.String("contract", "v1beta1", "Contract value for new release entry")
+	contractFlag := flag.String("contract", "v1beta2", "Contract value for new release entry")
 	repoDir := flag.String("repo-dir", ".", "Root directory of the repository")
 	flag.Parse()
 

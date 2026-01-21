@@ -21,5 +21,5 @@ spec:
       matchLabels:
         import: ""
   install:
-    followLatest: true # We will install alpha for helmop support
+    version: v0.14.2-rc.2 # Needed for github.com/rancher/fleet/issues/4432
 

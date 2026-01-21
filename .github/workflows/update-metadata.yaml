@@ -24,7 +24,7 @@ jobs:
         env:
           REPO_DIR: $GITHUB_WORKSPACE
         run: |
-          go run main.go --contract v1beta1 --repo-dir "${{ github.workspace }}"
+          go run main.go --contract v1beta2 --repo-dir "${{ github.workspace }}"
 
       - name: Check for changes
         id: git-check

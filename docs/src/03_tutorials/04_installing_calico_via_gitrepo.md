@@ -29,7 +29,7 @@ In this scenario cluster is located in the `default` namespace, where the rest o
 Cluster is labeled with `cni: calico` in order for the `GitRepo` to match on it.
 
 ```yaml
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2
 kind: Cluster
 metadata:
   name: docker-demo
