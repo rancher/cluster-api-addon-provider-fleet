@@ -1,7 +1,7 @@
 use base64::prelude::*;
-use chrono::Local;
 use educe::Educe;
 use futures::StreamExt as _;
+use jiff::Timestamp;
 use std::{fmt::Display, io, str::FromStr, sync::Arc, time::Duration};
 
 use k8s_openapi::{
@@ -130,7 +130,7 @@ impl FleetAddonConfig {
         chart.add_repo()?.wait().await?;
 
         status.conditions.push(Condition {
-            last_transition_time: Time(Local::now().to_utc()),
+            last_transition_time: Time(Timestamp::now()),
             message: format!("Repo added: {}", chart.repo),
             observed_generation: self.metadata.generation,
             reason: "RepoAdd".into(),
@@ -141,7 +141,7 @@ impl FleetAddonConfig {
         chart.update_repo()?.wait().await?;
 
         status.conditions.push(Condition {
-            last_transition_time: Time(Local::now().to_utc()),
+            last_transition_time: Time(Timestamp::now()),
             message: format!("Repo updated: {}", chart.repo),
             observed_generation: self.metadata.generation,
             reason: "RepoUpdate".into(),
@@ -383,7 +383,7 @@ impl FleetAddonConfig {
             {
                 chart.fleet(&HelmOperation::Upgrade)?.wait().await?;
                 status.conditions.push(Condition {
-                    last_transition_time: Time(Local::now().to_utc()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: format!("Updated fleet to version {}", search.app_version),
                     observed_generation: self.metadata.generation,
                     reason: "Installed".into(),
@@ -397,7 +397,7 @@ impl FleetAddonConfig {
             {
                 chart.fleet(&HelmOperation::Upgrade)?.wait().await?;
                 status.conditions.push(Condition {
-                    last_transition_time: Time(Local::now().to_utc()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: format!("Updated fleet to version {expected}"),
                     observed_generation: self.metadata.generation,
                     reason: "Installed".into(),
@@ -410,7 +410,7 @@ impl FleetAddonConfig {
             | (None, Some(_), Install::Version(app_version)) => {
                 chart.fleet(&HelmOperation::Install)?.wait().await?;
                 status.conditions.push(Condition {
-                    last_transition_time: Time(Local::now().to_utc()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: format!("Installed fleet version {app_version}"),
                     observed_generation: self.metadata.generation,
                     reason: "Installed".into(),
@@ -440,7 +440,7 @@ impl FleetAddonConfig {
                     .get_or_insert_default()
                     .conditions
                     .push(Condition {
-                        last_transition_time: Time(Local::now().to_utc()),
+                        last_transition_time: Time(Timestamp::now()),
                         message: format!(
                             "Updated chart flags to the expected state: {feature_gates}"
                         ),

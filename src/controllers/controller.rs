@@ -4,10 +4,10 @@ use crate::controllers::PatchError;
 use crate::metrics::Diagnostics;
 use crate::multi_dispatcher::{BroadcastStream, MultiDispatcher, typed_gvk};
 use crate::{Error, Metrics, telemetry};
-use chrono::Utc;
 
 use futures::Stream;
 use futures::stream::SelectAll;
+use jiff::Timestamp;
 use k8s_openapi::{ClusterResourceScope, NamespaceResourceScope};
 
 use kube::api::{DynamicObject, Patch, PatchParams, PostParams};
@@ -103,7 +103,7 @@ where
         .await
     {
         // Ignore forbidden errors on namespace deletion
-        Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
+        Err(kube::Error::Api(e)) if e.is_forbidden() => (),
         e => e?,
     }
 
@@ -165,7 +165,7 @@ where
         .await
     {
         // Ignore forbidden errors on namespace deletion
-        Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
+        Err(kube::Error::Api(e)) if e.is_forbidden() => (),
         e => e?,
     }
 
@@ -288,7 +288,7 @@ where
     async fn reconcile(self: Arc<Self>, ctx: Arc<Context>) -> crate::Result<Action> {
         let _current = Span::current().record("reconcile_id", display(telemetry::get_trace_id()));
 
-        ctx.diagnostics.write().await.last_event = Utc::now();
+        ctx.diagnostics.write().await.last_event = Timestamp::now();
 
         let api = Self::get_api(ctx.client.clone(), self.get_namespace());
         debug!("Reconciling");
@@ -334,7 +334,7 @@ where
             .await
         {
             // Ignore forbidden errors on namespace deletion
-            Err(kube::Error::Api(e)) if &e.reason == "Forbidden" => (),
+            Err(kube::Error::Api(e)) if e.is_forbidden() => (),
             e => e?,
         }
 
