@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::Error;
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use kube::{
     Client, ResourceExt,
     runtime::events::{Recorder, Reporter},
@@ -84,7 +84,7 @@ impl Metrics {
 #[derive(Clone, Serialize)]
 pub struct Diagnostics {
     #[serde(deserialize_with = "from_ts")]
-    pub last_event: DateTime<Utc>,
+    pub last_event: Timestamp,
     #[serde(skip)]
     pub reporter: Reporter,
 }
@@ -92,7 +92,7 @@ pub struct Diagnostics {
 impl Default for Diagnostics {
     fn default() -> Self {
         Self {
-            last_event: Utc::now(),
+            last_event: Timestamp::now(),
             reporter: "caapf-controller".into(),
         }
     }

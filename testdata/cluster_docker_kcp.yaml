@@ -73,7 +73,7 @@ spec:
         kind: DockerMachineTemplate
         name: docker-demo-control-plane
   replicas: 1
-  version: v1.34.0
+  version: v1.35.0
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: DockerMachineTemplate
@@ -123,4 +123,4 @@ spec:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: DockerMachineTemplate
         name: docker-demo-md-0
-      version: v1.34.0
+      version: v1.35.0

@@ -1,10 +1,10 @@
 NAME := "cluster-api-addon-provider-fleet"
-KUBE_VERSION := env_var_or_default('KUBE_VERSION', '1.34.0')
+KUBE_VERSION := env_var_or_default('KUBE_VERSION', '1.35.0')
 ORG := "ghcr.io/rancher"
 TAG := "dev"
 HOME_DIR := env_var('HOME')
 YQ_VERSION := "v4.50.1"
-CLUSTERCTL_VERSION := "v1.11.4"
+CLUSTERCTL_VERSION := "v1.12.2"
 OUT_DIR := "_out"
 KUSTOMIZE_VERSION := "v5.8.0"
 ARCH := if arch() == "aarch64" { "arm64"} else { "amd64" }
@@ -12,7 +12,7 @@ DIST := os()
 REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
 
 # Test providers
-CLUSTER_API_VERSION := "v1.11.4"
+CLUSTER_API_VERSION := "v1.12.2"
 
 export PATH := "_out:_out/bin:" + env_var('PATH')
 
@@ -33,7 +33,7 @@ generate-addon-crds features="":
     
     # The following is a manual patch to fix an incorrect CRD generation for nullable enums.
     # The issue has been fixed in kube-rs, but not yet released.
-    # See: https://github.com/kube-rs/kube/pull/1853 
+    # See: https://github.com/kube-rs/kube/issues/1906
     yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.nullable=true' config/crds/fleet-addon-config.yaml
     yq -i 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.anyOf)' config/crds/fleet-addon-config.yaml
     yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.oneOf[0].required=["inferLocal"]' config/crds/fleet-addon-config.yaml

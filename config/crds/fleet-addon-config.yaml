@@ -144,6 +144,7 @@ spec:
                                     type: string
                                   divisor:
                                     description: Specifies the output format of the exposed resources, defaults to "1"
+                                    nullable: true
                                     x-kubernetes-int-or-string: true
                                   resource:
                                     description: 'Required: resource to select'

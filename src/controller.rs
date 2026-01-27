@@ -10,10 +10,10 @@ use crate::metrics::Diagnostics;
 use crate::multi_dispatcher::{BroadcastStream, MultiDispatcher, broadcaster};
 use crate::{Error, Metrics};
 
-use chrono::Local;
 use clap::Parser;
 use futures::{Stream, StreamExt};
 
+use jiff::Timestamp;
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::{Condition, Time};
 use kube::api::{Patch, PatchParams};
 use kube::core::DeserializeGuard;
@@ -122,7 +122,7 @@ trait ControllerDefault: WatchStreamExt {
     {
         self.modify(|g| g.managed_fields_mut().clear())
             .touched_objects()
-            .predicate_filter(predicates::resource_version)
+            .predicate_filter(predicates::resource_version, Default::default())
             .default_backoff()
     }
 
@@ -137,7 +137,7 @@ trait ControllerDefault: WatchStreamExt {
         self.modify(|g| g.managed_fields_mut().clear())
             .reflect(writer)
             .touched_objects()
-            .predicate_filter(predicates::resource_version)
+            .predicate_filter(predicates::resource_version, Default::default())
             .default_backoff()
     }
 }
@@ -218,7 +218,7 @@ pub async fn run_fleet_helm_controller(state: State) {
         Config::default().any_semantic(),
     )
     .default_with_reflect(writer)
-    .predicate_filter(predicates::generation);
+    .predicate_filter(predicates::generation, Default::default());
 
     let fleet_addon_config_controller = Controller::for_stream(fleet_addon_config, reader)
         .shutdown_on_signal()
@@ -236,7 +236,7 @@ pub async fn run_fleet_helm_controller(state: State) {
                     status_message = "False";
                 }
                 conditions.push(Condition {
-                    last_transition_time: Time(Local::now().to_utc()),
+                    last_transition_time: Time(Timestamp::now()),
                     message,
                     observed_generation: obj.metadata.generation,
                     reason: "Ready".into(),
