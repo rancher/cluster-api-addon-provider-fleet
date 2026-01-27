@@ -524,7 +524,7 @@ dependencies = [
  "educe",
  "fleet-api-rs",
  "futures",
- "http 1.3.1",
+ "http 1.4.0",
  "hyper",
  "jiff",
  "k8s-openapi 0.27.0",
@@ -1058,7 +1058,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "futures-sink",
- "http 1.3.1",
+ "http 1.4.0",
  "indexmap 2.9.0",
  "slab",
  "tokio",
@@ -1134,12 +1134,11 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.3.1"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4a85d31aea989eead29a3aaf9e1115a180df8282431156e533de47660892565"
+checksum = "e3ba2a386d7f85a81f119ad7498ebe444d2e22c2af0b86b069416ace48b3311a"
 dependencies = [
  "bytes",
- "fnv",
  "itoa",
 ]
 
@@ -1150,7 +1149,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
 dependencies = [
  "bytes",
- "http 1.3.1",
+ "http 1.4.0",
 ]
 
 [[package]]
@@ -1161,7 +1160,7 @@ checksum = "b021d93e26becf5dc7e1b75b1bed1fd93124b374ceb73f43d4d4eafec896a64a"
 dependencies = [
  "bytes",
  "futures-core",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "pin-project-lite",
 ]
@@ -1189,7 +1188,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "h2 0.4.10",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "httparse",
  "itoa",
@@ -1206,7 +1205,7 @@ version = "0.27.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03a01595e11bdcec50946522c32dde3fc6914743000a68b93000965f2f02406d"
 dependencies = [
- "http 1.3.1",
+ "http 1.4.0",
  "hyper",
  "hyper-util",
  "log",
@@ -1241,7 +1240,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "hyper",
  "libc",
@@ -1456,7 +1455,7 @@ dependencies = [
  "portable-atomic",
  "portable-atomic-util",
  "serde_core",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1616,7 +1615,7 @@ dependencies = [
  "either",
  "futures",
  "home",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -1650,7 +1649,7 @@ dependencies = [
  "bytes",
  "either",
  "futures",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -1684,7 +1683,7 @@ dependencies = [
  "chrono",
  "derive_more",
  "form_urlencoded",
- "http 1.3.1",
+ "http 1.4.0",
  "k8s-openapi 0.26.1",
  "schemars 1.2.0",
  "serde",
@@ -1701,7 +1700,7 @@ checksum = "1ac76281aa698dd34111e25b21f5f6561932a30feabab5357152be273f8a81bb"
 dependencies = [
  "derive_more",
  "form_urlencoded",
- "http 1.3.1",
+ "http 1.4.0",
  "jiff",
  "json-patch",
  "k8s-openapi 0.27.0",
@@ -1930,7 +1929,7 @@ checksum = "d7a6d09a73194e6b66df7c8f1b680f156d916a1a942abf2de06823dd02b7855d"
 dependencies = [
  "async-trait",
  "bytes",
- "http 1.3.1",
+ "http 1.4.0",
  "opentelemetry",
  "reqwest",
 ]
@@ -1941,7 +1940,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2366db2dca4d2ad033cad11e6ee42844fd727007af5ad04a1730f4cb8163bf"
 dependencies = [
- "http 1.3.1",
+ "http 1.4.0",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-proto",
@@ -2344,7 +2343,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -2954,7 +2953,7 @@ dependencies = [
  "async-trait",
  "base64",
  "bytes",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -3010,7 +3009,7 @@ dependencies = [
  "base64",
  "bitflags",
  "bytes",
- "http 1.3.1",
+ "http 1.4.0",
  "http-body",
  "mime",
  "pin-project-lite",
