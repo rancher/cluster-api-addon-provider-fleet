@@ -42,13 +42,13 @@ spec:
       customImage: kindest/node:v1.34.0
       bootstrapTimeout: 15m
 ---
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+apiVersion: controlplane.cluster.x-k8s.io/v1beta2
 kind: RKE2ControlPlane
 metadata:
   name: docker-demo-control-plane
 spec:
   replicas: 1
-  version: v1.34.0+rke2r1
+  version: v1.34.3+rke2r1
   rolloutStrategy:
     rollingUpdate:
       maxSurge: 1
@@ -65,16 +65,13 @@ spec:
       kubernetesComponents:
       - cloudController
   machineTemplate:
-    infrastructureRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
-      kind: DockerMachineTemplate
-      name:  docker-demo-control-plane
-    nodeDrainTimeout: 30s
-  infrastructureRef:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
-    kind: DockerMachineTemplate
-    name:  docker-demo-control-plane
-  nodeDrainTimeout: 30s
+    spec:
+      infrastructureRef:
+        apiGroup: infrastructure.cluster.x-k8s.io
+        kind: DockerMachineTemplate
+        name:  docker-demo-control-plane
+      deletion:
+        nodeDrainTimeoutSeconds: 30
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
 kind: DockerMachineTemplate
@@ -86,7 +83,7 @@ spec:
       customImage: kindest/node:v1.34.0
       bootstrapTimeout: 15m
 ---
-apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta2
 kind: RKE2ConfigTemplate
 metadata:
   name: docker-demo-md-0
@@ -104,7 +101,7 @@ spec:
       cluster.x-k8s.io/cluster-name: docker-demo
   template:
     spec:
-      version: v1.34.0+rke2r1
+      version: v1.34.3+rke2r1
       clusterName: docker-demo
       bootstrap:
         configRef:
