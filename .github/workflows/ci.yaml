@@ -90,41 +90,39 @@ jobs:
         with:
           name: artifacts-import-${{ matrix.display_name }}
           path: _out/gather
-  # 
-  # CAPRKE2 missing CAPI v1.11 support
-  #
-  # test-e2e-import-rke2:
-  #   name: test-e2e-import-rke2 ${{ matrix.display_name }}
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - kube_version: "1.32.0"
-  #           display_name: "stable"
-  #         - kube_version: "1.34.0"
-  #           display_name: "latest"
-  #   env:
-  #     KUBE_VERSION: ${{ matrix.kube_version }}
-  #   steps:
-  #     - name: Install just
-  #       run: cargo install just
-  #     - name: Install kind
-  #       uses: helm/kind-action@v1
-  #       with:
-  #         install_only: true
-  #         version: v0.29.0
-  #     - uses: actions/checkout@v4
-  #     - name: Test (Import RKE2) - ${{ matrix.display_name }}
-  #       run: just test-import-rke2
-  #     - name: Collect artifacts
-  #       if: always()
-  #       run: just collect-test-import
-  #     - name: Store run artifacts
-  #       uses: actions/upload-artifact@v4
-  #       if: always()
-  #       with:
-  #         name: artifacts-import-rke2-${{ matrix.display_name }}
-  #         path: _out/gather
+
+  test-e2e-import-rke2:
+    name: test-e2e-import-rke2 ${{ matrix.display_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - kube_version: "1.32.0"
+            display_name: "stable"
+          - kube_version: "1.34.0"
+            display_name: "latest"
+    env:
+      KUBE_VERSION: ${{ matrix.kube_version }}
+    steps:
+      - name: Install just
+        run: cargo install just
+      - name: Install kind
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+          version: v0.29.0
+      - uses: actions/checkout@v4
+      - name: Test (Import RKE2) - ${{ matrix.display_name }}
+        run: just test-import-rke2
+      - name: Collect artifacts
+        if: always()
+        run: just collect-test-import
+      - name: Store run artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artifacts-import-rke2-${{ matrix.display_name }}
+          path: _out/gather
 
   clippy:
     runs-on: ubuntu-latest

@@ -13,6 +13,7 @@ REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
 
 # Test providers
 CLUSTER_API_VERSION := "v1.11.4"
+CAPRKE2_VERSION := "v0.22.0"
 
 export PATH := "_out:_out/bin:" + env_var('PATH')
 
@@ -166,7 +167,7 @@ install-fleet: _create-out-dir
 
 # Install cluster api and any providers
 install-capi: _download-clusterctl
-    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init --core cluster-api:{{CLUSTER_API_VERSION}} -i docker:{{CLUSTER_API_VERSION}} -b rke2 -c rke2 -b kubeadm:{{CLUSTER_API_VERSION}} -c kubeadm:{{CLUSTER_API_VERSION}}
+    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init --core cluster-api:{{CLUSTER_API_VERSION}} -i docker:{{CLUSTER_API_VERSION}} -b rke2:{{CAPRKE2_VERSION}} -c rke2:{{CAPRKE2_VERSION}} -b kubeadm:{{CLUSTER_API_VERSION}} -c kubeadm:{{CLUSTER_API_VERSION}}
 
 # Deploy will deploy the operator
 deploy features="": _download-kustomize
