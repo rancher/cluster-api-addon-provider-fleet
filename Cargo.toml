@@ -41,7 +41,7 @@ kube = { version = "3.0.0" , features = [
     "unstable-runtime",
     "unstable-client",
 ] }
-schemars = { version = "1.2.0", features = ["jiff02"] }
+schemars = { version = "1.2.1", features = ["jiff02"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_with = "3.16"
 serde_json = "1.0.149"
