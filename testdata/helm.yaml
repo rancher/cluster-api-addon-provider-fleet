@@ -3,6 +3,7 @@ kind: HelmOp
 metadata:
   name: calico
 spec:
+  defaultNamespace: tigera-operator
   helm:
     releaseName: projectcalico
     repo: https://docs.tigera.io/calico/charts
