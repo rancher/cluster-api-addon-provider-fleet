@@ -6,6 +6,10 @@ on:
   merge_group:
   workflow_dispatch:
 
+env:
+  SOURCE_REPO: https://github.com/${{ github.event.pull_request.head.repo.full_name || 'rancher/cluster-api-addon-provider-fleet' }}
+  SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+
 jobs:
   build:
     runs-on: ubuntu-latest

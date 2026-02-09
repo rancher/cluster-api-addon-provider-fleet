@@ -11,6 +11,9 @@ ARCH := if arch() == "aarch64" { "arm64"} else { "amd64" }
 DIST := os()
 REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
 
+GIT_REPO := env_var_or_default('SOURCE_REPO', `git remote get-url origin`)
+GIT_BRANCH := env_var_or_default('SOURCE_BRANCH', `git branch --show-current`)
+
 # Test providers
 CLUSTER_API_VERSION := "v1.12.2"
 CAPRKE2_VERSION := "v0.23.0"
@@ -127,11 +130,9 @@ deploy-calico:
 deploy-calico-gitrepo: _download-yq
     #!/usr/bin/env bash
     set -euxo pipefail
-    repo=`git remote get-url origin`
-    branch=`git branch --show-current`
     cp testdata/gitrepo-calico.yaml {{OUT_DIR}}/gitrepo-calico.yaml
-    yq -i ".spec.repo = \"${repo}\"" {{OUT_DIR}}/gitrepo-calico.yaml
-    yq -i ".spec.branch = \"${branch}\"" {{OUT_DIR}}/gitrepo-calico.yaml
+    yq -i ".spec.repo = \"{{GIT_REPO}}\"" {{OUT_DIR}}/gitrepo-calico.yaml
+    yq -i ".spec.branch = \"{{GIT_BRANCH}}\"" {{OUT_DIR}}/gitrepo-calico.yaml
     kubectl apply -f {{OUT_DIR}}/gitrepo-calico.yaml
 
 # Deploy an example app bundle to the cluster
