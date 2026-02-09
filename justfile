@@ -11,8 +11,12 @@ ARCH := if arch() == "aarch64" { "arm64"} else { "amd64" }
 DIST := os()
 REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
 
+GIT_REPO := env_var_or_default('SOURCE_REPO', `git remote get-url origin`)
+GIT_BRANCH := env_var_or_default('SOURCE_BRANCH', `git branch --show-current`)
+
 # Test providers
 CLUSTER_API_VERSION := "v1.12.2"
+CAPRKE2_VERSION := "v0.23.0"
 
 export PATH := "_out:_out/bin:" + env_var('PATH')
 
@@ -126,11 +130,9 @@ deploy-calico:
 deploy-calico-gitrepo: _download-yq
     #!/usr/bin/env bash
     set -euxo pipefail
-    repo=`git remote get-url origin`
-    branch=`git branch --show-current`
     cp testdata/gitrepo-calico.yaml {{OUT_DIR}}/gitrepo-calico.yaml
-    yq -i ".spec.repo = \"${repo}\"" {{OUT_DIR}}/gitrepo-calico.yaml
-    yq -i ".spec.branch = \"${branch}\"" {{OUT_DIR}}/gitrepo-calico.yaml
+    yq -i ".spec.repo = \"{{GIT_REPO}}\"" {{OUT_DIR}}/gitrepo-calico.yaml
+    yq -i ".spec.branch = \"{{GIT_BRANCH}}\"" {{OUT_DIR}}/gitrepo-calico.yaml
     kubectl apply -f {{OUT_DIR}}/gitrepo-calico.yaml
 
 # Deploy an example app bundle to the cluster
@@ -166,7 +168,7 @@ install-fleet: _create-out-dir
 
 # Install cluster api and any providers
 install-capi: _download-clusterctl
-    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init --core cluster-api:{{CLUSTER_API_VERSION}} -i docker:{{CLUSTER_API_VERSION}} -b rke2 -c rke2 -b kubeadm:{{CLUSTER_API_VERSION}} -c kubeadm:{{CLUSTER_API_VERSION}}
+    EXP_CLUSTER_RESOURCE_SET=true CLUSTER_TOPOLOGY=true clusterctl init --core cluster-api:{{CLUSTER_API_VERSION}} -i docker:{{CLUSTER_API_VERSION}} -b rke2:{{CAPRKE2_VERSION}} -c rke2:{{CAPRKE2_VERSION}} -b kubeadm:{{CLUSTER_API_VERSION}} -c kubeadm:{{CLUSTER_API_VERSION}}
 
 # Deploy will deploy the operator
 deploy features="": _download-kustomize
