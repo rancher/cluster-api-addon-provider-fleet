@@ -328,8 +328,18 @@ _download-kubectl: _create-out-dir
     set -euxo pipefail
     [ -z `which kubectl` ] || [ {{REFRESH_BIN}} != "0" ] || exit 0
     cd {{OUT_DIR}}
-    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/{{ARCH}}/kubectl"
-    chmod +x kubectl
+    retries=3
+    while ((retries > 0)); do
+    if curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/{{ARCH}}/kubectl"; then
+        chmod +x kubectl
+        exit 0
+    fi
+    ((retries --))
+    sleep 10s
+    done
+        echo "Failed to install kubectl"
+        exit 1
+
 
 [private]
 [macos]
@@ -338,5 +348,15 @@ _download-kubectl: _create-out-dir
     set -euxo pipefail
     [ -z `which kubectl` ] || [ {{REFRESH_BIN}} != "0" ] || exit 0
     cd {{OUT_DIR}}
-    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/{{ARCH}}/kubectl"
-    chmod +x kubectl
+    retries=3
+    while ((retries > 0)); do
+    if curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/{{ARCH}}/kubectl"; then
+        chmod +x kubectl
+        exit 0
+    fi
+    ((retries --))
+    sleep 10s
+    done
+        echo "Failed to install kubectl"
+        exit 1
+
