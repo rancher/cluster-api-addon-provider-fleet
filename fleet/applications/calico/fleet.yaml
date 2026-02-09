@@ -1,3 +1,4 @@
+defaultNamespace: tigera-operator
 helm:
   releaseName: projectcalico
   repo: https://docs.tigera.io/calico/charts
@@ -17,11 +18,3 @@ helm:
             encapsulation: None
             natOutgoing: Enabled
             nodeSelector: all()${- end}
-
-diff:
-  comparePatches:
-  - apiVersion: operator.tigera.io/v1
-    kind: Installation
-    name: default
-    operations:
-    - {"op":"remove", "path":"/spec/kubernetesProvider"}
