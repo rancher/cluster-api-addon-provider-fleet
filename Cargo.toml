@@ -55,7 +55,7 @@ opentelemetry = { version = "0.31.0" }
 opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic", "logs"]}
 opentelemetry_sdk = { version = "0.31.0" }
 thiserror = "2.0.18"
-anyhow = "1.0.100"
+anyhow = "1.0.101"
 base64 = "0.22.1"
 clap = { version = "4.5.57", features = ["derive"] }
 cluster-api-rs = "1.12.2"
