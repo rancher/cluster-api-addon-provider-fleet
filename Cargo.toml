@@ -43,7 +43,7 @@ kube = { version = "3.0.1" , features = [
 ] }
 schemars = { version = "1.2.1", features = ["jiff02"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_with = "3.16"
+serde_with = "3.17"
 serde_json = "1.0.149"
 serde_yaml = "0.9.34"
 prometheus = "0.14.0"
