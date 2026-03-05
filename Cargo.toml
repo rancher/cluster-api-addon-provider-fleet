@@ -61,7 +61,7 @@ clap = { version = "4.5.57", features = ["derive"] }
 cluster-api-rs = "1.12.3"
 fleet-api-rs = "0.14.3"
 async-broadcast = "0.7.2"
-pin-project = "1.1.10"
+pin-project = "1.1.11"
 async-stream = "0.3.6"
 educe = { version = "0.6.0", features = ["PartialEq"] }
 
