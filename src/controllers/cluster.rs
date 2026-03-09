@@ -179,10 +179,12 @@ impl FleetBundle for FleetClusterBundle {
         }
 
         if self.config.cluster_patch_enabled() {
+            let mut patch_params = PatchParams::apply("addon-provider-fleet");
+            patch_params.force = true;
             patch(
                 ctx.clone(),
                 cluster,
-                &PatchParams::apply("addon-provider-fleet"),
+                &patch_params,
             )
             .await?
         } else {
