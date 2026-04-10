@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Install just
         run: cargo install just
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Build
         run: just compile
 
@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Install just
         run: cargo install just
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test
         run: just test-unit
 
@@ -45,18 +45,18 @@ jobs:
       - name: Install just
         run: cargo install just
       - name: Install kind
-        uses: helm/kind-action@v1
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
           install_only: true
           version: v0.29.0
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test (Cluster Class) - ${{ matrix.display_name }}
         run: just test-cluster-class-import
       - name: Collect artifacts
         if: always()
         run: just collect-test-cluster-class-import
       - name: Store run artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: artifacts-cluster-class-import-${{ matrix.display_name }}
@@ -78,18 +78,18 @@ jobs:
       - name: Install just
         run: cargo install just
       - name: Install kind
-        uses: helm/kind-action@v1
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
           install_only: true
           version: v0.29.0
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test (Import) - ${{ matrix.display_name }}
         run: just test-import
       - name: Collect artifacts
         if: always()
         run: just collect-test-import
       - name: Store run artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: artifacts-import-${{ matrix.display_name }}
@@ -111,18 +111,18 @@ jobs:
       - name: Install just
         run: cargo install just
       - name: Install kind
-        uses: helm/kind-action@v1
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
           install_only: true
           version: v0.29.0
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test (Import RKE2) - ${{ matrix.display_name }}
         run: just test-import-rke2
       - name: Collect artifacts
         if: always()
         run: just collect-test-import
       - name: Store run artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: artifacts-import-rke2-${{ matrix.display_name }}
@@ -131,6 +131,6 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -W clippy::pedantic
