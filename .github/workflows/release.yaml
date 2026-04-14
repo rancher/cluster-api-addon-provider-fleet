@@ -18,7 +18,7 @@ jobs:
       packages: write
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -53,7 +53,7 @@ jobs:
     needs: [build]
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
