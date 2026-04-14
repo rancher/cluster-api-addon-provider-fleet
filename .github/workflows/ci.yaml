@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Build
         run: just compile
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test
         run: just test-unit
@@ -43,7 +43,7 @@ jobs:
       KUBE_VERSION: ${{ matrix.kube_version }}
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - name: Install kind
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
@@ -76,7 +76,7 @@ jobs:
       KUBE_VERSION: ${{ matrix.kube_version }}
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - name: Install kind
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
@@ -109,7 +109,7 @@ jobs:
       KUBE_VERSION: ${{ matrix.kube_version }}
     steps:
       - name: Install just
-        run: cargo install just
+        run: cargo install just@1.49.0
       - name: Install kind
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
         with:
