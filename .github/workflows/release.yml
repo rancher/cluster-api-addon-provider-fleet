@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
 
     - name: "Read secrets"
-      uses: rancher-eio/read-vault-secrets@main
+      uses: rancher-eio/read-vault-secrets@7282bf97898cd1c16c89f837e0bb442e6d384c89
       with:
         secrets: |
           secret/data/github/repo/${{ github.repository }}/dockerhub/${{ github.repository_owner }}/credentials username | DOCKER_USERNAME ;
@@ -26,7 +26,7 @@ jobs:
           secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials password | PRIME_REGISTRY_PASSWORD ;
 
     - name: Push image to public
-      uses: rancher/ecm-distro-tools/actions/publish-image@master
+      uses: rancher/ecm-distro-tools/actions/publish-image@5d6e63896fea85836b2fca6dfb9236bcefe2aaa5
       with:
         image: cluster-api-addon-provider-fleet
         tag: ${{ github.ref_name }}
@@ -39,7 +39,7 @@ jobs:
 
     - name: Push image to prime
       if: ${{ !contains(github.ref_name, '-rc') }}
-      uses: rancher/ecm-distro-tools/actions/publish-image@master
+      uses: rancher/ecm-distro-tools/actions/publish-image@5d6e63896fea85836b2fca6dfb9236bcefe2aaa5
       with:
         image: cluster-api-addon-provider-fleet
         tag: ${{ github.ref_name }}
