@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  publish-image:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: runs-on,runner=8cpu-linux-x64,run-id=${{ github.run_id }},image=ubuntu22-full-x64
+    steps:
+    - name: Check out code
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+
+    - name: "Read secrets"
+      uses: rancher-eio/read-vault-secrets@main
+      with:
+        secrets: |
+          secret/data/github/repo/${{ github.repository }}/dockerhub/${{ github.repository_owner }}/credentials username | DOCKER_USERNAME ;
+          secret/data/github/repo/${{ github.repository }}/dockerhub/${{ github.repository_owner }}/credentials password | DOCKER_PASSWORD ;
+          secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials registry | PRIME_REGISTRY ;
+          secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials username | PRIME_REGISTRY_USERNAME ;
+          secret/data/github/repo/${{ github.repository }}/rancher-prime-registry/credentials password | PRIME_REGISTRY_PASSWORD ;
+
+    - name: Push image to public
+      uses: rancher/ecm-distro-tools/actions/publish-image@master
+      with:
+        image: cluster-api-addon-provider-fleet
+        tag: ${{ github.ref_name }}
+        platforms: linux/amd64,linux/arm64
+        push-to-prime: false
+        public-repo: rancher
+        public-username: ${{ env.DOCKER_USERNAME }}
+        public-password: ${{ env.DOCKER_PASSWORD }}
+        make-target: push-image
+
+    - name: Push image to prime
+      if: ${{ !contains(github.ref_name, '-rc') }}
+      uses: rancher/ecm-distro-tools/actions/publish-image@master
+      with:
+        image: cluster-api-addon-provider-fleet
+        tag: ${{ github.ref_name }}
+        platforms: linux/amd64,linux/arm64
+        push-to-public: false
+        prime-repo: rancher
+        prime-registry: ${{ env.PRIME_REGISTRY }}
+        prime-username: ${{ env.PRIME_REGISTRY_USERNAME }}
+        prime-password: ${{ env.PRIME_REGISTRY_PASSWORD }}
+        prime-make-target: push-prime-image
+
+  release:
+    name: Create release
+    needs: publish-image
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+      with:
+        fetch-depth: 0
+    - name: Create GH release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release create ${{ github.ref_name }} --generate-notes
