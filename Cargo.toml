@@ -33,8 +33,8 @@ rand = { version = "0.9", features = ["small_rng"] }
 actix-web = "4.13.0"
 futures = "0.3.32"
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread", "process"] }
-k8s-openapi = { version = "0.27.0", features = ["latest", "schemars"] }
-kube = { version = "3.0.1" , features = [
+k8s-openapi = { version = "0.27.1", features = ["latest", "schemars"] }
+kube = { version = "3.1.0" , features = [
     "runtime",
     "client",
     "derive",
@@ -58,8 +58,8 @@ thiserror = "2.0.18"
 anyhow = "1.0.102"
 base64 = "0.22.1"
 clap = { version = "4.5.57", features = ["derive"] }
-cluster-api-rs = "1.12.3"
-fleet-api-rs = "0.14.3"
+cluster-api-rs = "1.12.5"
+fleet-api-rs = "0.15.0"
 async-broadcast = "0.7.2"
 pin-project = "1.1.10"
 async-stream = "0.3.6"
