@@ -3,10 +3,10 @@ KUBE_VERSION := env_var_or_default('KUBE_VERSION', '1.35.0')
 ORG := "ghcr.io/rancher"
 TAG := "dev"
 HOME_DIR := env_var('HOME')
-YQ_VERSION := "v4.50.1"
-CLUSTERCTL_VERSION := "v1.12.2"
+YQ_VERSION := "v4.53.2"
+CLUSTERCTL_VERSION := "v1.13.1"
 OUT_DIR := "_out"
-KUSTOMIZE_VERSION := "v5.8.0"
+KUSTOMIZE_VERSION := "v5.8.1"
 ARCH := if arch() == "aarch64" { "arm64"} else { "amd64" }
 DIST := os()
 REFRESH_BIN := env_var_or_default('REFRESH_BIN', '1')
@@ -15,8 +15,8 @@ GIT_REPO := env_var_or_default('SOURCE_REPO', `git remote get-url origin`)
 GIT_BRANCH := env_var_or_default('SOURCE_BRANCH', `git branch --show-current`)
 
 # Test providers
-CLUSTER_API_VERSION := "v1.12.2"
-CAPRKE2_VERSION := "v0.23.0"
+CLUSTER_API_VERSION := "v1.13.1"
+CAPRKE2_VERSION := "v0.24.3"
 
 export PATH := "_out:_out/bin:" + env_var('PATH')
 
@@ -34,19 +34,7 @@ _generate-kopium-url kpath="" source="" dest="" yqexp="." condition="":
 
 generate-addon-crds features="":
     cargo run --features={{features}} --bin crdgen > config/crds/fleet-addon-config.yaml
-    
-    # The following is a manual patch to fix an incorrect CRD generation for nullable enums.
-    # The issue has been fixed in kube-rs, but not yet released.
-    # See: https://github.com/kube-rs/kube/issues/1906
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.nullable=true' config/crds/fleet-addon-config.yaml
-    yq -i 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.anyOf)' config/crds/fleet-addon-config.yaml
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.oneOf[0].required=["inferLocal"]' config/crds/fleet-addon-config.yaml
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.config.properties.server.oneOf[1].required=["custom"]' config/crds/fleet-addon-config.yaml
-
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.nullable=true' config/crds/fleet-addon-config.yaml
-    yq -i 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.anyOf)' config/crds/fleet-addon-config.yaml
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.oneOf[0].required=["followLatest"]' config/crds/fleet-addon-config.yaml
-    yq -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.install.oneOf[1].required=["version"]' config/crds/fleet-addon-config.yaml
+    yq -i '.' config/crds/fleet-addon-config.yaml # Keep the file yq formatted to help reviews.
 
 # run with opentelemetry
 run-telemetry:
