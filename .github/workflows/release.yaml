@@ -7,7 +7,8 @@ on:
 
 env:
   TAG: ${{ github.ref_name }}
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: cluster-api-addon-provider-fleet
+  REPOSITORY_OWNER: ${{ github.repository_owner }}
   REGISTRY: ghcr.io
 
 jobs:
@@ -16,35 +17,35 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # write is needed for:
+      # - OIDC for cosign's use in ecm-distro-tools/publish-image
+      # - Publish image to ghcr.io
+      id-token: write
+    strategy:
+      matrix:
+        include:
+        - platform: linux/amd64
+          tag-suffix: "linux-amd64"
+        - platform: linux/arm64
+          tag-suffix: "linux-arm64"
     steps:
-      - name: Install just
-        run: cargo install just@1.49.0
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
-      - name: Docker login
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+      - name: Push image to ghcr.io
+        uses: rancher/ecm-distro-tools/actions/publish-image@067de5ae5517b661b4d2f10e22cc5a21aa0ac915
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      - name: Build and push
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
-        with:
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          image: ${{ env.IMAGE_NAME }}
+          tag: ${{ env.TAG }}-${{ matrix.tag-suffix }}
+          platforms: ${{ matrix.platform }}
+          push-to-public: true
+          push-to-prime: false
+          public-registry: ${{ env.REGISTRY }}
+          public-repo: ${{ env.REPOSITORY_OWNER }}
+          public-username: ${{ github.actor }}
+          public-password: ${{ secrets.GITHUB_TOKEN }}
+          make-target: push-image
   release:
     runs-on: ubuntu-latest
     permissions:
@@ -66,4 +67,4 @@ jobs:
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ env.TAG }} --generate-notes --discussion-category "Announcements" metadata.yaml _out/addon-components.yaml
+        run: gh release create ${{ env.TAG }} --draft --generate-notes metadata.yaml _out/addon-components.yaml
