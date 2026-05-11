@@ -207,9 +207,10 @@ spec:
                           operator:
                             description: |-
                               Operator represents a key's relationship to the value.
-                              Valid operators are Exists and Equal. Defaults to Equal.
+                              Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
                               Exists is equivalent to wildcard for value, so that a pod can
                               tolerate all taints of a particular category.
+                              Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
                             nullable: true
                             type: string
                           tolerationSeconds:
@@ -401,6 +402,12 @@ spec:
                       type: object
                     server:
                       description: fleet server url configuration options
+                      nullable: true
+                      oneOf:
+                        - required:
+                            - inferLocal
+                        - required:
+                            - custom
                       properties:
                         custom:
                           properties:
@@ -437,14 +444,14 @@ spec:
                         inferLocal:
                           type: boolean
                       type: object
-                      nullable: true
-                      oneOf:
-                        - required:
-                            - inferLocal
-                        - required:
-                            - custom
                   type: object
                 install:
+                  nullable: true
+                  oneOf:
+                    - required:
+                        - followLatest
+                    - required:
+                        - version
                   properties:
                     followLatest:
                       description: Follow the latest version of the chart on install
@@ -453,12 +460,6 @@ spec:
                       description: Use specific version to install
                       type: string
                   type: object
-                  nullable: true
-                  oneOf:
-                    - required:
-                        - followLatest
-                    - required:
-                        - version
               type: object
             status:
               nullable: true
