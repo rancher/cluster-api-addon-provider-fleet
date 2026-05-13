@@ -1,9 +1,9 @@
 # renovate: datasource=github-release-attachments depName=rust-lang/rustup
 ARG RUSTUP_VERSION=1.29.0
 # renovate: datasource=github-release-attachments depName=rust-lang/rustup digestVersion=1.29.0
-ARG RUSTUP_SUM_arm64=9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792
+ARG RUSTUP_SUM_arm64=88761caacddb92cd79b0b1f939f3990ba1997d701a38b3e8dd6746a562f2a759
 # renovate: datasource=github-release-attachments depName=rust-lang/rustup digestVersion=1.29.0
-ARG RUSTUP_SUM_amd64=4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10
+ARG RUSTUP_SUM_amd64=9cd3fda5fd293890e36ab271af6a786ee22084b5f6c2b83fd8323cec6f0992c1
 
 FROM --platform=${BUILDPLATFORM} ghcr.io/cross-rs/aarch64-unknown-linux-musl:0.2.5 AS build-arm64
 ARG BUILDPLATFORM
@@ -12,7 +12,7 @@ ARG RUSTUP_VERSION
 ARG RUSTUP_SUM_arm64
 
 RUN curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/rustup-init \
-    "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/aarch64-unknown-linux-gnu/rustup-init" && \
+    "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/aarch64-unknown-linux-musl/rustup-init" && \
     echo "${RUSTUP_SUM_arm64}  /tmp/rustup-init" | sha256sum -c - && \
     chmod +x /tmp/rustup-init && \
     /tmp/rustup-init -y --target aarch64-unknown-linux-musl --default-toolchain stable && \
@@ -37,7 +37,7 @@ ARG RUSTUP_VERSION
 ARG RUSTUP_SUM_amd64
 
 RUN curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/rustup-init \
-    "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-gnu/rustup-init" && \
+    "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-musl/rustup-init" && \
     echo "${RUSTUP_SUM_amd64}  /tmp/rustup-init" | sha256sum -c - && \
     chmod +x /tmp/rustup-init && \
     /tmp/rustup-init -y --target x86_64-unknown-linux-musl --default-toolchain stable && \

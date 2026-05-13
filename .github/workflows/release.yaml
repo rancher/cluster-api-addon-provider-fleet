@@ -7,7 +7,7 @@ on:
 
 env:
   TAG: ${{ github.ref_name }}
-  IMAGE_NAME: cluster-api-addon-provider-fleet
+  IMAGE: cluster-api-addon-provider-fleet
   REPOSITORY_OWNER: ${{ github.repository_owner }}
   REGISTRY: ghcr.io
 
@@ -21,24 +21,17 @@ jobs:
       # - OIDC for cosign's use in ecm-distro-tools/publish-image
       # - Publish image to ghcr.io
       id-token: write
-    strategy:
-      matrix:
-        include:
-        - platform: linux/amd64
-          tag-suffix: "linux-amd64"
-        - platform: linux/arm64
-          tag-suffix: "linux-arm64"
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
       - name: Push image to ghcr.io
-        uses: rancher/ecm-distro-tools/actions/publish-image@067de5ae5517b661b4d2f10e22cc5a21aa0ac915
+        uses: rancher/ecm-distro-tools/actions/publish-image@da9f5b6e258c327660eeab3db97952b612f1cf9f # v0.69.3
         with:
-          image: ${{ env.IMAGE_NAME }}
-          tag: ${{ env.TAG }}-${{ matrix.tag-suffix }}
-          platforms: ${{ matrix.platform }}
+          image: ${{ env.IMAGE }}
+          tag: ${{ env.TAG }}
+          platforms: linux/amd64,linux/arm64
           push-to-public: true
           push-to-prime: false
           public-registry: ${{ env.REGISTRY }}
