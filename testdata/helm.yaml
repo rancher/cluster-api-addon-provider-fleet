@@ -8,8 +8,10 @@ spec:
     releaseName: projectcalico
     repo: https://docs.tigera.io/calico/charts
     chart: tigera-operator
+    version: v3.31.5
     templateValues:
       installation: |-
+        kubernetesProvider: Kind
         cni:
           type: Calico
           ipam:
