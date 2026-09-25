@@ -55,8 +55,8 @@ COPY ./ ./
 ARG features=""
 RUN cargo install --locked --target x86_64-unknown-linux-musl --features=${features} --path .
 
-FROM --platform=amd64 registry.suse.com/suse/helm:3.17 AS helm-amd64
-FROM --platform=arm64 registry.suse.com/suse/helm:3.17 AS helm-arm64
+FROM --platform=amd64 registry.suse.com/suse/helm:3.21 AS helm-amd64
+FROM --platform=arm64 registry.suse.com/suse/helm:3.21 AS helm-arm64
 
 FROM helm-amd64 AS target-amd64
 COPY --from=build-amd64 --chmod=0755 /root/.cargo/bin/controller /apps/controller
