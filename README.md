@@ -1,6 +1,6 @@
 # Cluster API Add-on Provider for Fleet
 
-> NOTE: The project is looking for more contributors.
+> NOTE: This project is deprecated and will soon become unsupported. If you are a Rancher user, most of the Fleet/CAPI integration features are being migrated to Rancher Turtles.
 
 ## What is Cluster API Add-on Provider for Fleet (CAAPF)?
 
